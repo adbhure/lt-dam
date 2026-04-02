@@ -1,860 +1,952 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Asset Monitoring System</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#f4f7f2;
-      --ink:#173042;
-      --muted:#688195;
-      --line:#d5dfdc;
-      --card:#ffffff;
-      --card-soft:#f9fcfa;
-      --brand:#0f8b8d;
-      --brand-deep:#126782;
-      --accent:#f4a261;
-      --danger:#d1495b;
-      --success:#2a9d8f;
-      --shadow:0 16px 42px rgba(23,48,66,.12);
-      --radius:24px;
-      --radius-sm:16px;
-      --mono:'IBM Plex Mono', monospace;
-      --sans:'Manrope', sans-serif;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>L&T AssetOps — Daily Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1117; --bg2:#161b24; --bg3:#1c2433;
+  --card:#1e2738; --card2:#242f42;
+  --border:#2a3a52; --border2:#354a68;
+  --lt-red:#e8001d; --lt-dark:#b50018;
+  --blue:#3b82f6; --blue2:#2563eb;
+  --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --purple:#a855f7;
+  --txt:#f1f5ff; --txt2:#8899bb; --txt3:#4a5e7a; --txt4:#2d3d55;
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --rad:12px; --rad2:18px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--txt);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:100px;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%,rgba(59,130,246,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 20% 80%,rgba(232,0,29,.04) 0%,transparent 60%);
+}
+.page{position:relative;z-index:1;max-width:520px;margin:0 auto;}
 
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{
-      font-family:var(--sans);
-      background:
-        radial-gradient(circle at top right, rgba(15,139,141,.18), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(244,162,97,.18), transparent 30%),
-        linear-gradient(180deg, #eef6f2 0%, #f5f7f3 48%, #edf2ef 100%);
-      color:var(--ink);
-      min-height:100vh;
-    }
+/* TOPBAR */
+.topbar{
+  background:rgba(14,17,23,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.lt-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.lt-badge{
+  background:var(--lt-red);border-radius:8px;width:40px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-size:14px;font-weight:800;color:#fff;letter-spacing:-.5px;
+  box-shadow:0 0 16px rgba(232,0,29,.35);flex-shrink:0;
+}
+.lt-text{display:flex;flex-direction:column;gap:1px;}
+.lt-company{font-size:12px;font-weight:700;color:var(--txt);letter-spacing:.3px;line-height:1;}
+.lt-project{font-family:var(--mono);font-size:8.5px;color:var(--txt3);letter-spacing:.5px;}
+.topbar-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+.live-row{display:flex;align-items:center;gap:5px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.live-label{font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:1px;}
+.clock-val{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:.5px;}
+.clock-date{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.3px;}
 
-    .app{
-      width:min(100%, 760px);
-      margin:0 auto;
-      padding:18px 14px 40px;
-    }
+/* PROJECT BANNER */
+.proj-banner{
+  background:rgba(232,0,29,.07);border-bottom:1px solid rgba(232,0,29,.15);
+  padding:8px 16px;display:flex;align-items:center;justify-content:space-between;
+}
+.pb-left{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,100,100,.85);}
+.pb-right{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;}
 
-    .hero{
-      background:linear-gradient(140deg, rgba(18,103,130,.95), rgba(15,139,141,.92));
-      color:#fff;
-      border-radius:32px;
-      padding:22px 20px;
-      box-shadow:var(--shadow);
-      position:relative;
-      overflow:hidden;
-    }
+/* EDIT ALERT */
+.edit-alert{
+  display:none;margin:12px 14px 0;
+  background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06));
+  border:1px solid rgba(245,158,11,.35);border-left:3px solid var(--amber);
+  border-radius:var(--rad);padding:11px 14px;gap:10px;align-items:flex-start;
+}
+.edit-alert.show{display:flex;}
+.ea-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.ea-title{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--amber);margin-bottom:3px;}
+.ea-desc{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.3px;line-height:1.5;}
 
-    .hero::after{
-      content:"";
-      position:absolute;
-      inset:auto -40px -70px auto;
-      width:220px;
-      height:220px;
-      border-radius:50%;
-      background:rgba(255,255,255,.08);
-    }
+/* ASSET HERO */
+.asset-hero{
+  margin:14px 14px 0;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--rad2);padding:16px;position:relative;overflow:hidden;
+}
+.asset-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--lt-red),var(--blue));
+}
+.qr-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);
+  border-radius:20px;padding:4px 10px;margin-bottom:12px;
+}
+.qr-icon{display:grid;grid-template-columns:repeat(3,4px);gap:1.5px;}
+.qr-icon span{border-radius:1px;}
+.qr-on{background:var(--blue);}
+.qr-off{background:transparent;}
+.qr-txt{font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:.8px;text-transform:uppercase;}
+.asset-main{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.a-label{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;display:block;}
+.a-code{font-size:28px;font-weight:800;letter-spacing:1px;color:var(--blue);line-height:1;min-height:34px;display:flex;align-items:center;}
+.a-code.empty{color:var(--txt4);font-size:16px;font-weight:400;font-family:var(--mono);}
+.a-desc{font-family:var(--mono);font-size:10px;color:var(--green);margin-top:4px;display:flex;align-items:center;gap:4px;}
+.a-desc::before{content:'▶';font-size:7px;}
+.a-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.status-pill{
+  display:flex;align-items:center;gap:5px;border-radius:20px;padding:4px 10px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.5px;
+  border:1px solid transparent;white-space:nowrap;
+}
+.sp-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.sp-standby{background:rgba(74,94,122,.2);border-color:var(--border2);color:var(--txt3);}
+.sp-loaded{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.25);color:var(--green);}
+.sp-edit{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:var(--amber);}
+.sp-brkd{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:var(--red);}
+.sp-unknown{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.25);color:var(--purple);}
+.std-label{font-family:var(--mono);font-size:9px;color:var(--txt4);text-align:right;}
+.asset-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.chip{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border2);
+  border-radius:20px;padding:3px 9px;
+  font-family:var(--mono);font-size:8.5px;color:var(--txt3);letter-spacing:.3px;
+}
+.chip-dot{width:4px;height:4px;border-radius:50%;}
 
-    .hero-top,.hero-bottom,.hero-meta,.card-grid,.summary-grid,.field-grid,.action-row{display:grid;gap:14px}
-    .hero-top{grid-template-columns:1fr auto;align-items:start}
-    .hero-kicker,.mini-label,.field label,.section-title,.chip,.status-badge,.toast,.helper,.metric-label,.timeline-date,.footer-note{
-      font-family:var(--mono);
-      letter-spacing:.04em;
-    }
+/* PROGRESS */
+.prog-wrap{padding:10px 14px 0;}
+.prog-steps{display:flex;gap:4px;margin-bottom:5px;}
+.p-step{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background .3s;}
+.p-step.done{background:var(--green);}
+.p-step.active{background:var(--blue);}
+.p-label{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;}
 
-    .hero-kicker{font-size:12px;opacity:.86;text-transform:uppercase}
-    .hero-title{margin:8px 0 0;font-size:30px;line-height:1.05;font-weight:800}
-    .hero-subtitle{margin:8px 0 0;font-size:14px;max-width:420px;color:rgba(255,255,255,.84)}
-    .status-badge{
-      justify-self:end;
-      padding:10px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.16);
-      font-size:12px;
-      font-weight:600;
-      white-space:nowrap;
-    }
+/* SECTIONS */
+.section{
+  margin:12px 14px 0;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--rad2);overflow:hidden;
+  animation:slideUp .4s ease both;
+}
+.section:nth-child(2){animation-delay:.05s}
+.section:nth-child(3){animation-delay:.1s}
+.section:nth-child(4){animation-delay:.15s}
+.section:nth-child(5){animation-delay:.2s}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.sec-head{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  background:rgba(59,130,246,.03);
+}
+.sec-num{
+  width:24px;height:24px;min-width:24px;border:1.5px solid var(--blue);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10px;font-weight:600;color:var(--blue);
+}
+.sec-num.amber{border-color:var(--amber);color:var(--amber);}
+.sec-num.red{border-color:var(--red);color:var(--red);}
+.sec-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);}
+.sec-title.red{color:rgba(239,68,68,.8);}
+.sec-badge{
+  margin-left:auto;border-radius:20px;padding:2px 8px;
+  font-family:var(--mono);font-size:8px;letter-spacing:.5px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue);
+}
+.sec-badge.green{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2);color:var(--green);}
+.sec-badge.red{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:var(--red);}
+.sec-badge.dim{background:rgba(255,255,255,.02);border-color:var(--border2);color:var(--txt3);}
+.sec-body{padding:16px;}
 
-    .hero-bottom{grid-template-columns:repeat(3,1fr);margin-top:18px}
-    .hero-stat{
-      background:rgba(255,255,255,.12);
-      backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:20px;
-      padding:14px;
-    }
+/* FIELDS */
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.f-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--txt3);margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.f-req{color:var(--lt-red);font-size:12px;line-height:1;}
+.f-hint{font-size:8px;color:var(--txt4);letter-spacing:.3px;margin-left:auto;}
+input.fi,select.fi,textarea.fi{
+  width:100%;background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--rad);padding:12px 14px;
+  font-family:var(--sans);font-size:14px;color:var(--txt);
+  outline:none;transition:border-color .2s,box-shadow .2s,background .2s;
+  appearance:none;-webkit-appearance:none;
+}
+input.fi:focus,select.fi:focus,textarea.fi:focus{
+  border-color:var(--blue);background:rgba(59,130,246,.04);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
+}
+input.fi::placeholder,textarea.fi::placeholder{color:var(--txt4);}
+input[type=date].fi{color-scheme:dark;}
+.fi.ro{
+  background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.3);
+  color:var(--blue);font-weight:700;font-family:var(--mono);
+  font-size:14px;letter-spacing:.5px;cursor:not-allowed;
+}
+.fi.autofill{
+  background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.3);
+  color:var(--green);font-weight:600;cursor:not-allowed;
+}
+.fi.prevhmr{
+  background:rgba(59,130,246,.05);border-color:rgba(59,130,246,.25);
+  color:var(--blue);font-weight:600;font-family:var(--mono);cursor:not-allowed;
+}
+select.fi{
+  cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%233b82f6' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;
+}
+select.fi option{background:var(--card);}
+textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
+.err-msg{font-family:var(--mono);font-size:9px;color:var(--red);margin-top:4px;display:none;letter-spacing:.3px;}
+.err-msg.show{display:block;}
 
-    .mini-label{font-size:11px;color:rgba(255,255,255,.75);text-transform:uppercase}
-    .hero-value{font-size:24px;font-weight:800;margin-top:8px}
-    .hero-detail{font-size:12px;color:rgba(255,255,255,.8);margin-top:6px}
+/* HMR CALC PANEL */
+.hmr-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);overflow:hidden;margin-top:12px;}
+.hmr-ptitle{
+  padding:8px 14px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.hmr-calc-row{
+  display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;
+  align-items:center;padding:12px 10px;gap:4px;
+}
+.hmr-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad);padding:10px 8px;text-align:center;}
+.hmr-box-lbl{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.hmr-box-val{font-size:22px;font-weight:800;letter-spacing:1px;}
+.hv-prev{color:var(--txt2);}
+.hv-today{color:var(--blue);}
+.hv-run{color:var(--green);}
+.hv-empty{color:var(--txt4);}
+.hmr-op{font-family:var(--mono);font-size:16px;color:var(--txt3);text-align:center;font-weight:600;}
+.hmr-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border);}
+.hmr-metric{padding:10px 8px;text-align:center;border-right:1px solid var(--border);}
+.hmr-metric:last-child{border-right:none;}
+.hm-lbl{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.hm-val{font-size:18px;font-weight:700;}
+.hm-unit{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:1px;}
+.hm-run{color:var(--green);}.hm-idle{color:var(--blue);}.hm-brkd{color:var(--red);}
+.util-bar{border-top:1px solid var(--border);padding:10px 14px;}
+.util-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;margin-bottom:6px;}
+.util-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.util-fill{height:100%;border-radius:3px;width:0;transition:width .5s ease,background .3s;}
 
-    .banner{
-      margin-top:14px;
-      display:none;
-      background:#fff4e9;
-      border:1px solid #f7d7b4;
-      color:#8c4f14;
-      border-radius:20px;
-      padding:14px 16px;
-      box-shadow:0 8px 20px rgba(140,79,20,.08);
-    }
+/* HOUR BLOCKS */
+.h-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.h-block{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--rad);padding:13px 10px 10px;
+  position:relative;overflow:hidden;transition:border-color .2s,box-shadow .2s;
+}
+.h-block::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .25s;}
+.hb-hmr::before{background:var(--blue);}
+.hb-brkd::before{background:var(--red);}
+.h-block.hb-hmr:focus-within{border-color:var(--blue);box-shadow:0 0 14px rgba(59,130,246,.15);}
+.h-block.hb-brkd:focus-within{border-color:var(--red);box-shadow:0 0 14px rgba(239,68,68,.15);}
+.h-block:focus-within::before{opacity:1;}
+.h-lbl{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:4px;}
+.hb-hmr .h-lbl{color:var(--blue);}.hb-brkd .h-lbl{color:var(--red);}
+.h-dot{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor;}
+.h-input{
+  width:100%;background:transparent;border:none;outline:none;
+  font-size:36px;font-weight:800;text-align:center;padding:2px 0;color:var(--txt);letter-spacing:.5px;
+}
+.h-input::placeholder{color:var(--txt4);font-weight:400;font-size:26px;}
+.h-unit{font-family:var(--mono);font-size:8px;color:var(--txt3);text-align:center;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+.suf-wrap{position:relative;}
+.suf-tag{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;}
+.suf-wrap .fi{padding-right:58px;}
 
-    .banner.show{display:block}
-    .banner strong{display:block;font-size:14px;margin-bottom:5px}
+/* REASON */
+.reason-locked{background:var(--bg2);border:1px dashed var(--border2);border-radius:var(--rad);padding:14px;text-align:center;font-family:var(--mono);font-size:9px;color:var(--txt4);letter-spacing:.5px;}
+.reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.r-btn{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rad);
+  padding:11px 12px;display:flex;align-items:center;gap:8px;
+  cursor:pointer;transition:all .15s;font-size:13px;color:var(--txt2);text-align:left;
+}
+.r-btn:hover{background:var(--bg3);border-color:var(--border);}
+.r-btn.on{border-color:var(--red);background:rgba(239,68,68,.08);color:var(--txt);}
+.r-btn input[type=radio]{display:none;}
+.r-dot{width:11px;height:11px;min-width:11px;border:1.5px solid var(--txt3);border-radius:50%;transition:all .15s;}
+.r-btn.on .r-dot{border-color:var(--red);background:var(--red);box-shadow:0 0 8px var(--red);}
 
-    .summary-grid{
-      grid-template-columns:repeat(2,1fr);
-      margin:18px 0 0;
-    }
+/* SUBMIT */
+.submit-wrap{margin:14px 14px 0;animation:slideUp .4s .25s ease both;}
+.submit-btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--lt-red),#ff3050,var(--lt-dark));
+  background-size:200% 100%;
+  border:none;border-radius:var(--rad);padding:17px;
+  font-size:15px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  color:#fff;cursor:pointer;position:relative;overflow:hidden;
+  transition:background-position .4s,transform .1s,opacity .2s;
+  box-shadow:0 8px 24px rgba(232,0,29,.3);
+}
+.submit-btn:hover{background-position:100% 0;}
+.submit-btn:active{transform:scale(.99);}
+.submit-btn.edit-btn{background:linear-gradient(135deg,#b45309,var(--amber),#92400e);box-shadow:0 8px 24px rgba(245,158,11,.25);}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.submit-meta{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-family:var(--mono);font-size:8.5px;color:var(--txt4);letter-spacing:.5px;}
+.sm-dot{width:2px;height:2px;border-radius:50%;background:var(--txt4);}
 
-    .summary-card,.card{
-      background:rgba(255,255,255,.84);
-      border:1px solid rgba(255,255,255,.7);
-      border-radius:26px;
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(10px);
-    }
+/* SUCCESS */
+#successScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;}
+#successScreen.show{display:flex;}
+.succ-ring{width:88px;height:88px;border-radius:50%;background:rgba(34,197,94,.08);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 0 50px rgba(34,197,94,.2);animation:pop .5s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.succ-ring svg{width:38px;height:38px;}
+.succ-title{font-size:28px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:8px;}
+.succ-asset{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:.5px;margin-bottom:6px;}
+.succ-summary{font-family:var(--mono);font-size:10px;color:var(--txt3);letter-spacing:.5px;line-height:2;margin-bottom:12px;}
+.succ-ts{font-family:var(--mono);font-size:9px;color:var(--txt4);background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:7px 14px;display:inline-block;margin-bottom:28px;letter-spacing:.3px;}
+.succ-again{background:transparent;border:1px solid var(--border2);border-radius:var(--rad);padding:12px 24px;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);cursor:pointer;transition:all .2s;}
+.succ-again:hover{border-color:var(--blue);color:var(--blue);}
 
-    .summary-card{
-      padding:16px;
-      min-height:120px;
-    }
+/* LOADING */
+#loadingOverlay{display:none;position:fixed;inset:0;background:rgba(15,17,23,.8);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+#loadingOverlay.show{display:flex;}
+.spin{width:34px;height:34px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-family:var(--mono);font-size:11px;color:var(--txt2);letter-spacing:.5px;}
 
-    .metric-label{font-size:11px;color:var(--muted);text-transform:uppercase}
-    .metric-value{margin-top:10px;font-size:28px;font-weight:800}
-    .metric-note{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.5}
-
-    .card-grid{margin-top:18px}
-    .card{padding:18px}
-    .section-title{font-size:12px;color:var(--brand-deep);text-transform:uppercase;margin-bottom:16px}
-
-    .field-grid{grid-template-columns:repeat(2,1fr)}
-    .field{display:flex;flex-direction:column;gap:8px}
-    .field.full{grid-column:1/-1}
-    .field label{
-      font-size:11px;
-      color:var(--muted);
-      text-transform:uppercase;
-    }
-
-    input,select,textarea,button{
-      font:inherit;
-    }
-
-    input,select,textarea{
-      width:100%;
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:14px 15px;
-      background:#fff;
-      color:var(--ink);
-      transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-    }
-
-    input:focus,select:focus,textarea:focus{
-      outline:none;
-      border-color:var(--brand);
-      box-shadow:0 0 0 4px rgba(15,139,141,.12);
-    }
-
-    input[readonly]{
-      background:var(--card-soft);
-      color:#476276;
-    }
-
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
-
-    .helper{font-size:11px;color:var(--muted)}
-    .chip-row{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{
-      font-size:11px;
-      text-transform:uppercase;
-      color:var(--brand-deep);
-      background:#e7f6f5;
-      padding:8px 10px;
-      border-radius:999px;
-    }
-
-    .calc-panel{
-      background:linear-gradient(180deg, #fbfffd, #f1f7f6);
-      border:1px solid #dbe7e3;
-      border-radius:22px;
-      padding:16px;
-    }
-
-    .calc-grid{
-      display:grid;
-      gap:12px;
-      grid-template-columns:repeat(4,1fr);
-      margin-top:12px;
-    }
-
-    .calc-box{
-      background:#fff;
-      border:1px solid #e2ece9;
-      border-radius:18px;
-      padding:14px 12px;
-    }
-
-    .calc-box .metric-value{font-size:22px;margin-top:8px}
-
-    .progress{
-      height:10px;
-      background:#dde8e4;
-      border-radius:999px;
-      overflow:hidden;
-      margin-top:14px;
-    }
-
-    .progress-bar{
-      height:100%;
-      width:0;
-      background:linear-gradient(90deg, var(--brand), var(--accent));
-      transition:width .25s ease;
-    }
-
-    .timeline{
-      display:grid;
-      gap:10px;
-    }
-
-    .timeline-item{
-      border:1px solid #e1ebe7;
-      border-radius:18px;
-      padding:14px;
-      background:#fbfefd;
-    }
-
-    .timeline-title{font-weight:700}
-    .timeline-date{font-size:11px;color:var(--muted);margin-top:6px}
-    .timeline-note{font-size:13px;color:#476276;margin-top:8px;line-height:1.5}
-
-    .action-row{
-      grid-template-columns:1fr auto;
-      align-items:center;
-      margin-top:18px;
-    }
-
-    .save-btn{
-      border:none;
-      background:linear-gradient(135deg, var(--brand-deep), var(--brand));
-      color:#fff;
-      padding:16px 22px;
-      border-radius:18px;
-      font-size:16px;
-      font-weight:800;
-      cursor:pointer;
-      box-shadow:0 14px 26px rgba(18,103,130,.22);
-      transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
-    }
-
-    .save-btn:hover{transform:translateY(-1px)}
-    .save-btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
-
-    .mode-pill{
-      justify-self:end;
-      padding:10px 12px;
-      border-radius:999px;
-      background:#edf4f2;
-      color:#476276;
-      font-size:12px;
-      font-weight:700;
-    }
-
-    .toast{
-      position:fixed;
-      left:50%;
-      bottom:24px;
-      transform:translateX(-50%) translateY(120px);
-      min-width:min(90vw, 440px);
-      background:#173042;
-      color:#fff;
-      border-radius:18px;
-      padding:14px 16px;
-      box-shadow:0 20px 45px rgba(23,48,66,.24);
-      font-size:12px;
-      transition:transform .25s ease;
-      z-index:50;
-    }
-
-    .toast.show{transform:translateX(-50%) translateY(0)}
-    .footer-note{margin-top:16px;text-align:center;color:var(--muted);font-size:11px}
-
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(19,34,43,.36);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:40;
-      backdrop-filter:blur(3px);
-    }
-
-    .overlay.show{display:flex}
-    .loader{
-      background:#fff;
-      border-radius:24px;
-      padding:22px 24px;
-      box-shadow:var(--shadow);
-      text-align:center;
-      min-width:260px;
-    }
-
-    .spinner{
-      width:38px;
-      height:38px;
-      border:4px solid #dfe9e5;
-      border-top-color:var(--brand);
-      border-radius:50%;
-      margin:0 auto 14px;
-      animation:spin .8s linear infinite;
-    }
-
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    @media (max-width:640px){
-      .hero-title{font-size:26px}
-      .hero-top,.hero-bottom,.summary-grid,.field-grid,.calc-grid,.action-row{grid-template-columns:1fr}
-      .status-badge,.mode-pill{justify-self:start}
-      .app{padding:14px 12px 36px}
-      .hero,.card,.summary-card{border-radius:24px}
-    }
-  </style>
+@media(max-width:360px){
+  .h-row{gap:7px;}.h-input{font-size:28px;}
+  .reason-grid{grid-template-columns:1fr;}
+  .hmr-calc-row{grid-template-columns:1fr 16px 1fr 16px 1fr;}
+}
+</style>
 </head>
 <body>
-  <div class="app">
-    <section class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="hero-kicker">Asset Monitoring System</div>
-          <h1 class="hero-title">Daily Inspection</h1>
-          <p class="hero-subtitle">QR-based field entry with same-day edit mode, live hour calculation, and Google Sheets update protection.</p>
-        </div>
-        <div class="status-badge" id="statusBadge">Awaiting scan</div>
-      </div>
-      <div class="hero-bottom">
-        <div class="hero-stat">
-          <div class="mini-label">Asset Code</div>
-          <div class="hero-value" id="heroCode">-</div>
-          <div class="hero-detail" id="heroDesc">Scan a QR code to begin</div>
-        </div>
-        <div class="hero-stat">
-          <div class="mini-label">Report Date</div>
-          <div class="hero-value" id="heroDate">-</div>
-          <div class="hero-detail">One entry per asset per day</div>
-        </div>
-        <div class="hero-stat">
-          <div class="mini-label">Mode</div>
-          <div class="hero-value" id="heroMode">NEW</div>
-          <div class="hero-detail" id="heroModeNote">Fresh entry will create a new row</div>
-        </div>
-      </div>
-    </section>
 
-    <div class="banner" id="editBanner">
-      <strong>Existing entry found for this asset on the selected date.</strong>
-      The form is now in edit mode. Saving will update the same row instead of creating a new one.
-    </div>
+<!-- LOADING -->
+<div id="loadingOverlay"><div class="spin"></div><div class="loading-txt" id="loadingTxt">Checking entry status...</div></div>
 
-    <section class="summary-grid">
-      <article class="summary-card">
-        <div class="metric-label">Previous HMR</div>
-        <div class="metric-value" id="prevHmrCard">-</div>
-        <div class="metric-note" id="prevEntryNote">No previous reading found yet.</div>
-      </article>
-      <article class="summary-card">
-        <div class="metric-label">Today Snapshot</div>
-        <div class="metric-value" id="utilCard">0%</div>
-        <div class="metric-note" id="statusNote">Utilization will calculate automatically from HMR.</div>
-      </article>
-    </section>
-
-    <div class="card-grid">
-      <section class="card">
-        <div class="section-title">Asset Details</div>
-        <div class="field-grid">
-          <div class="field">
-            <label for="assetCode">Asset Code</label>
-            <input id="assetCode" type="text" readonly>
-          </div>
-          <div class="field">
-            <label for="reportDate">Report Date</label>
-            <input id="reportDate" type="date">
-          </div>
-          <div class="field full">
-            <label for="description">Description</label>
-            <input id="description" type="text" readonly>
-          </div>
-          <div class="field">
-            <label for="assetType">Asset Type</label>
-            <input id="assetType" type="text" readonly>
-          </div>
-          <div class="field">
-            <label for="category">Category</label>
-            <input id="category" type="text" readonly>
-          </div>
-        </div>
-        <div class="chip-row" style="margin-top:14px">
-          <div class="chip" id="stdHoursChip">Std Hours: 24</div>
-          <div class="chip" id="makeChip">Make: -</div>
-          <div class="chip" id="masterStatusChip">Master Status: -</div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="section-title">Hours & Performance</div>
-        <div class="field-grid">
-          <div class="field">
-            <label for="prevHmr">Previous HMR</label>
-            <input id="prevHmr" type="number" readonly>
-            <div class="helper">Auto-fetched from the last earlier entry.</div>
-          </div>
-          <div class="field">
-            <label for="todayHmr">Today HMR</label>
-            <input id="todayHmr" type="number" min="0" step="0.01" placeholder="Enter current meter reading">
-          </div>
-          <div class="field">
-            <label for="breakdownHrs">Breakdown Hours</label>
-            <input id="breakdownHrs" type="number" min="0" max="24" step="0.5" placeholder="0">
-          </div>
-          <div class="field">
-            <label for="fuel">Fuel (L)</label>
-            <input id="fuel" type="number" min="0" step="0.01" placeholder="0">
-          </div>
-        </div>
-
-        <div class="calc-panel" style="margin-top:16px">
-          <div class="metric-label">Calculated Summary</div>
-          <div class="calc-grid">
-            <div class="calc-box">
-              <div class="metric-label">Running</div>
-              <div class="metric-value" id="runningCard">0</div>
-              <div class="helper">hours</div>
-            </div>
-            <div class="calc-box">
-              <div class="metric-label">Idle</div>
-              <div class="metric-value" id="idleCard">0</div>
-              <div class="helper">hours</div>
-            </div>
-            <div class="calc-box">
-              <div class="metric-label">Breakdown</div>
-              <div class="metric-value" id="breakdownCard">0</div>
-              <div class="helper">hours</div>
-            </div>
-            <div class="calc-box">
-              <div class="metric-label">Utilization</div>
-              <div class="metric-value" id="utilizationCard">0%</div>
-              <div class="helper" id="statusLine">Operational</div>
-            </div>
-          </div>
-          <div class="progress">
-            <div class="progress-bar" id="utilBar"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="section-title">Breakdown Details</div>
-        <div class="field-grid">
-          <div class="field">
-            <label for="breakdownReason">Breakdown Reason</label>
-            <select id="breakdownReason">
-              <option value="">Select reason</option>
-              <option value="Mechanical">Mechanical</option>
-              <option value="Electrical">Electrical</option>
-              <option value="Tyre / Track">Tyre / Track</option>
-              <option value="Fuel Issue">Fuel Issue</option>
-              <option value="Overheating">Overheating</option>
-              <option value="Operator Error">Operator Error</option>
-              <option value="External Damage">External Damage</option>
-              <option value="Scheduled Maintenance">Scheduled Maintenance</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="computedStatus">Status</label>
-            <input id="computedStatus" type="text" readonly>
-          </div>
-        </div>
-        <div class="helper" style="margin-top:10px">Breakdown reason is required only when breakdown hours are more than zero.</div>
-      </section>
-
-      <section class="card">
-        <div class="section-title">Previous Entry Timeline</div>
-        <div class="timeline" id="timelinePanel">
-          <div class="timeline-item">
-            <div class="timeline-title">No historical entry found</div>
-            <div class="timeline-note">Once this asset has earlier readings, the latest previous entry will appear here automatically.</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="section-title">Remarks</div>
-        <div class="field full">
-          <label for="remarks">Remarks</label>
-          <textarea id="remarks" placeholder="Maintenance notes, observations, pending work, abnormal noise, oil level, operator comments..."></textarea>
-        </div>
-        <div class="action-row">
-          <button class="save-btn" id="saveBtn" type="button">Save Entry</button>
-          <div class="mode-pill" id="modePill">NEW ENTRY</div>
-        </div>
-      </section>
-    </div>
-
-    <div class="footer-note" id="sessionText">Session -</div>
+<!-- SUCCESS -->
+<div id="successScreen">
+  <div class="succ-ring">
+    <svg viewBox="0 0 38 38" fill="none" stroke="var(--green)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 19 15 28 32 10"/>
+    </svg>
   </div>
+  <div class="succ-title" id="sTitle">Submitted</div>
+  <div class="succ-asset" id="sAsset"></div>
+  <div class="succ-summary" id="sSummary"></div>
+  <div class="succ-ts" id="sTs"></div>
+  <button class="succ-again" onclick="resetForm()">Submit Next Report</button>
+</div>
 
-  <div class="overlay" id="overlay">
-    <div class="loader">
-      <div class="spinner"></div>
-      <div id="overlayText">Loading asset data...</div>
+<div class="page">
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a class="lt-logo" href="#">
+    <div class="lt-badge">L&T</div>
+    <div class="lt-text">
+      <div class="lt-company">Larsen &amp; Toubro</div>
+      <div class="lt-project">HCI IC · ECC Division</div>
+    </div>
+  </a>
+  <div class="topbar-right">
+    <div class="live-row"><div class="live-dot"></div><span class="live-label">LIVE</span></div>
+    <div class="clock-val" id="hClock">--:--:--</div>
+    <div class="clock-date" id="hDate">--</div>
+  </div>
+</header>
+
+<!-- PROJECT BANNER -->
+<div class="proj-banner">
+  <div class="pb-left">MAHSR C3 — Section 1 · P&amp;M</div>
+  <div class="pb-right" id="sessionId">SESSION —</div>
+</div>
+
+<!-- EDIT ALERT -->
+<div class="edit-alert" id="editAlert">
+  <div class="ea-icon">✏️</div>
+  <div>
+    <div class="ea-title">Edit Mode — Entry Exists Today</div>
+    <div class="ea-desc">Existing data loaded. Update fields and click "Update Entry".</div>
+  </div>
+</div>
+
+<!-- ASSET HERO -->
+<div class="asset-hero">
+  <div class="qr-pill">
+    <div class="qr-icon">
+      <span class="qr-on"></span><span class="qr-off"></span><span class="qr-on"></span>
+      <span class="qr-off"></span><span class="qr-on"></span><span class="qr-off"></span>
+      <span class="qr-on"></span><span class="qr-off"></span><span class="qr-on"></span>
+    </div>
+    <span class="qr-txt" id="qrTxt">Scan machine QR code</span>
+  </div>
+  <div class="asset-main">
+    <div>
+      <span class="a-label">Asset Code</span>
+      <div class="a-code empty" id="aCode">NOT LOADED</div>
+      <div class="a-desc" id="aDesc"></div>
+    </div>
+    <div class="a-right">
+      <div class="status-pill sp-standby" id="statusPill"><div class="sp-dot"></div>STANDBY</div>
+      <div class="std-label" id="stdLabel">Std: — hrs/day</div>
     </div>
   </div>
+  <div class="asset-chips" id="aChips">
+    <div class="chip"><div class="chip-dot" style="background:var(--txt4)"></div>Awaiting QR scan</div>
+  </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog-steps">
+    <div class="p-step active" id="ps1"></div>
+    <div class="p-step" id="ps2"></div>
+    <div class="p-step" id="ps3"></div>
+    <div class="p-step" id="ps4"></div>
+  </div>
+  <div class="p-label" id="pLabel">Step 1 / 4 — Load Asset</div>
+</div>
 
-  <script>
-    const state = {
-      assetCode: '',
-      reportDate: '',
-      asset: null,
-      existingEntry: null,
-      previousEntry: null,
-      prevHmr: null,
-      stdHours: 24,
-      isEdit: false,
-      rowNumber: null
-    };
+<!-- SECTION 01 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num">01</div>
+    <div class="sec-title">Asset Information</div>
+    <div class="sec-badge green">QR AUTO-FILL</div>
+  </div>
+  <div class="sec-body">
+    <div class="field">
+      <div class="f-label"><span class="f-req">*</span>Asset Code <span class="f-hint">Read-only · set by QR</span></div>
+      <input type="text" class="fi ro" id="fCode" placeholder="Scan QR on machine..." readonly>
+    </div>
+    <div class="field">
+      <div class="f-label"><span class="f-req">*</span>Asset Description <span class="f-hint">Auto-filled</span></div>
+      <input type="text" class="fi autofill" id="fDesc" placeholder="Auto-populates after scan..." readonly>
+    </div>
+    <div class="field">
+      <div class="f-label"><span class="f-req">*</span>Report Date</div>
+      <input type="date" class="fi" id="fDate" onchange="onDateChange()">
+    </div>
+  </div>
+</div>
 
-    const ids = [
-      'assetCode','reportDate','description','assetType','category','prevHmr',
-      'todayHmr','breakdownHrs','fuel','breakdownReason','computedStatus','remarks',
-      'statusBadge','heroCode','heroDesc','heroDate','heroMode','heroModeNote',
-      'prevHmrCard','prevEntryNote','utilCard','statusNote','stdHoursChip','makeChip',
-      'masterStatusChip','runningCard','idleCard','breakdownCard','utilizationCard',
-      'statusLine','utilBar','timelinePanel','saveBtn','modePill','toast','overlay',
-      'overlayText','editBanner','sessionText'
-    ].reduce((acc, id) => {
-      acc[id] = document.getElementById(id);
-      return acc;
-    }, {});
+<!-- SECTION 02 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num">02</div>
+    <div class="sec-title">Hour Meter Reading</div>
+  </div>
+  <div class="sec-body">
 
-    function todayInTimezone() {
-      const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Kolkata',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).formatToParts(new Date()).reduce((obj, part) => {
-        obj[part.type] = part.value;
-        return obj;
-      }, {});
-      return `${parts.year}-${parts.month}-${parts.day}`;
-    }
+    <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:var(--rad);padding:9px 13px;margin-bottom:14px;">
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px;">ℹ HMR = Cumulative meter reading (like odometer)</div>
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--txt3);line-height:1.6;">Running Hours = Today HMR − Previous HMR. Enter breakdown hours manually below.</div>
+    </div>
 
-    function getQueryAssetCode() {
-      const params = new URLSearchParams(window.location.search);
-      return (params.get('asset') || params.get('code') || params.get('a') || '').trim().toUpperCase();
-    }
+    <div class="field">
+      <div class="f-label">Previous HMR <span class="f-hint">Auto-fetched from last entry</span></div>
+      <input type="text" class="fi prevhmr" id="fPrevHmr" placeholder="Fetching from sheet..." readonly>
+    </div>
 
-    function setOverlay(show, message) {
-      ids.overlay.classList.toggle('show', !!show);
-      ids.overlayText.textContent = message || 'Working...';
-    }
+    <div class="h-row">
+      <div class="h-block hb-hmr">
+        <div class="h-lbl"><div class="h-dot"></div>Today's HMR</div>
+        <input class="h-input" type="number" id="fHmr" min="0" step="1" placeholder="—" inputmode="decimal" oninput="recalcHours()">
+        <div class="h-unit">meter reading</div>
+      </div>
+      <div class="h-block hb-brkd">
+        <div class="h-lbl"><div class="h-dot"></div>Breakdown Hrs</div>
+        <input class="h-input" type="number" id="fBrkd" min="0" max="24" step="0.5" placeholder="0" inputmode="decimal" oninput="recalcHours();onBreakdown()">
+        <div class="h-unit">hours</div>
+      </div>
+    </div>
 
-    function showToast(message, isError) {
-      ids.toast.textContent = message;
-      ids.toast.style.background = isError ? '#8d2b3f' : '#173042';
-      ids.toast.classList.add('show');
-      clearTimeout(showToast.timer);
-      showToast.timer = setTimeout(() => ids.toast.classList.remove('show'), 2800);
-    }
+    <!-- HMR CALCULATION PANEL -->
+    <div class="hmr-panel">
+      <div class="hmr-ptitle">
+        <span>Live Calculation</span>
+        <span id="calcStatus" style="color:var(--txt4)">—</span>
+      </div>
+      <div class="hmr-calc-row">
+        <div class="hmr-box">
+          <div class="hmr-box-lbl">Prev HMR</div>
+          <div class="hmr-box-val hv-empty" id="calcPrev">—</div>
+        </div>
+        <div class="hmr-op">→</div>
+        <div class="hmr-box">
+          <div class="hmr-box-lbl">Today HMR</div>
+          <div class="hmr-box-val hv-empty" id="calcToday">—</div>
+        </div>
+        <div class="hmr-op">=</div>
+        <div class="hmr-box">
+          <div class="hmr-box-lbl">Running</div>
+          <div class="hmr-box-val hv-empty" id="calcRun">—</div>
+        </div>
+      </div>
+      <div class="hmr-metrics">
+        <div class="hmr-metric">
+          <div class="hm-lbl">Running</div>
+          <div class="hm-val hm-run" id="mRun">—</div>
+          <div class="hm-unit">hrs</div>
+        </div>
+        <div class="hmr-metric">
+          <div class="hm-lbl">Idle</div>
+          <div class="hm-val hm-idle" id="mIdle">—</div>
+          <div class="hm-unit">hrs</div>
+        </div>
+        <div class="hmr-metric">
+          <div class="hm-lbl">Breakdown</div>
+          <div class="hm-val hm-brkd" id="mBrkd">0</div>
+          <div class="hm-unit">hrs</div>
+        </div>
+      </div>
+      <div class="util-bar">
+        <div class="util-row">
+          <span>Utilization %</span>
+          <span id="mUtil" style="font-weight:700">—</span>
+        </div>
+        <div class="util-track"><div class="util-fill" id="utilFill"></div></div>
+      </div>
+    </div>
 
-    function serverCall(method, args) {
-      return new Promise((resolve, reject) => {
-        if (typeof google === 'undefined' || !google.script || !google.script.run) {
-          reject(new Error('Open this app from the Apps Script web app deployment URL.'));
-          return;
-        }
+    <div class="field" style="margin-top:14px;">
+      <div class="f-label"><span class="f-req">*</span>Fuel Refilled <span class="f-hint">Enter 0 if none</span></div>
+      <div class="suf-wrap">
+        <input type="number" class="fi" id="fFuel" min="0" placeholder="0" inputmode="decimal">
+        <span class="suf-tag">LITRES</span>
+      </div>
+      <div class="err-msg" id="eFuel">Please enter fuel value (0 if none)</div>
+    </div>
 
-        const runner = google.script.run
-          .withSuccessHandler(resolve)
-          .withFailureHandler(error => reject(new Error(error && error.message ? error.message : String(error))));
+  </div>
+</div>
 
-        runner[method].apply(runner, args || []);
-      });
-    }
+<!-- SECTION 03 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num red">03</div>
+    <div class="sec-title red">Breakdown Reason</div>
+    <div class="sec-badge red">CONDITIONAL</div>
+  </div>
+  <div class="sec-body">
+    <div class="reason-locked" id="bLocked">Enter breakdown hours &gt; 0 to unlock this section</div>
+    <div class="reason-grid" id="bGrid" style="display:none">
+      <label class="r-btn"><input type="radio" name="brs" value="Mechanical">    <div class="r-dot"></div>Mechanical</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Electrical">    <div class="r-dot"></div>Electrical</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Tyre / Track">  <div class="r-dot"></div>Tyre / Track</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Fuel Issue">    <div class="r-dot"></div>Fuel Issue</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Overheating">   <div class="r-dot"></div>Overheating</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Operator Error"><div class="r-dot"></div>Operator Error</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Ext. Damage">   <div class="r-dot"></div>Ext. Damage</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Sched. Maint."> <div class="r-dot"></div>Sched. Maint.</label>
+    </div>
+    <div class="err-msg" id="eBrkdR" style="margin-top:8px">Please select a breakdown reason</div>
+  </div>
+</div>
 
-    function formatNumber(value, decimals) {
-      if (value === '' || value === null || value === undefined || Number.isNaN(Number(value))) {
-        return '-';
+<!-- SECTION 04 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num amber">04</div>
+    <div class="sec-title">Remarks &amp; Notes</div>
+    <div class="sec-badge dim">OPTIONAL</div>
+  </div>
+  <div class="sec-body">
+    <textarea class="fi" id="fRemarks" placeholder="Pending repairs, abnormal sounds, oil level, maintenance notes..."></textarea>
+  </div>
+</div>
+
+<!-- SUBMIT -->
+<div class="submit-wrap">
+  <button class="submit-btn" id="submitBtn" onclick="doSubmit()">Transmit Daily Report</button>
+  <div class="submit-meta">
+    <span>L&amp;T · MAHSR C3</span>
+    <div class="sm-dot"></div>
+    <span id="submitMode">NEW ENTRY</span>
+    <div class="sm-dot"></div>
+    <span id="sSessId">—</span>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ================================================================
+//  CONFIGURATION
+// ================================================================
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwztdAnfGUZmvnsPuPjb67sTEWKsM-MzA5WUgBDVewReCLfU7UstW5M2HOl-XQ0w00Wbg/exec';  // ← Paste your Web App /exec URL here
+var SHEET_ID   = '1iBjWkRJXZEAKicPv9ILlozlC96fBkA1a_HplF5zqqE0';
+var SHEET_TAB  = 'ASSET_MASTER';
+
+// ================================================================
+//  LOCAL ASSET DATABASE (instant fallback — no network required)
+// ================================================================
+var LOCAL_DB = {
+  '25237829':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '25237721':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '25237772':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '25233661':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1846':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1951':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1978':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1986':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A2150':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '1901045525':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901045526':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901046378':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901046538':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '2410595':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901048373':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '25401971':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901043747':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25503006':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25502964':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25504380':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500RZH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500SAH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500SEH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500SFH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '68173':{d:'125 KVA DG SET',t:'Gen 125K',c:'Power-DG',s:24},
+  '25700812':{d:'125 KVA DG SET',t:'Gen 125K',c:'Power-DG',s:24},
+  '25701525':{d:'125 KVA DG SET',t:'Gen 125K',c:'Power-DG',s:24},
+  '2592677H':{d:'250 KVA DG SET',t:'Gen 250K',c:'Power-Heavy',s:24},
+  '25961560':{d:'500 KVA DG',t:'Gen 500K',c:'Power-Heavy',s:24},
+  '25980556':{d:'750 KVA DG SET',t:'Gen 750K',c:'Power-Heavy',s:24}
+};
+
+// ── Runtime state ──
+var LIVE_DB    = {};
+var prevHmr    = null;   // previous day HMR for this asset
+var stdHours   = 24;     // standard hours for this asset type
+var isEditMode = false;  // true when today's entry already exists
+var editRowNum = null;   // sheet row number of that entry
+
+function G(id){return document.getElementById(id);}
+var MO=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function pad2(n){return String(n).padStart(2,'0');}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+
+function readQR(){
+  try{var p=new URLSearchParams(window.location.search);return(p.get('asset')||p.get('code')||p.get('a')||'').trim().toUpperCase();}
+  catch(e){return '';}
+}
+
+function tick(){
+  try{
+    var n=new Date();
+    G('hClock').textContent=pad2(n.getHours())+':'+pad2(n.getMinutes())+':'+pad2(n.getSeconds());
+    G('hDate').textContent=pad2(n.getDate())+' '+MO[n.getMonth()]+' '+n.getFullYear();
+  }catch(e){}
+}
+
+function setProgress(s){
+  for(var i=1;i<=4;i++){var el=G('ps'+i);el.className='p-step'+(i<s?' done':i===s?' active':'');}
+  var lbl=['','1/4 — Load Asset','2/4 — Asset Ready','3/4 — HMR Entered','4/4 — Ready'];
+  G('pLabel').textContent=lbl[s]||lbl[1];
+}
+
+function showLoading(msg){G('loadingTxt').textContent=msg||'Loading...';G('loadingOverlay').classList.add('show');}
+function hideLoading(){G('loadingOverlay').classList.remove('show');}
+
+function setEditMode(isEdit,rowNum){
+  isEditMode=isEdit;editRowNum=rowNum||null;
+  var btn=G('submitBtn');
+  if(isEdit){
+    G('editAlert').classList.add('show');
+    btn.textContent='Update Entry';btn.classList.add('edit-btn');
+    G('submitMode').textContent='EDIT · Row '+(rowNum||'?');
+    G('statusPill').className='status-pill sp-edit';
+    G('statusPill').innerHTML='<div class="sp-dot"></div>EDIT MODE';
+  } else {
+    G('editAlert').classList.remove('show');
+    btn.textContent='Transmit Daily Report';btn.classList.remove('edit-btn');
+    G('submitMode').textContent='NEW ENTRY';
+  }
+}
+
+// ── Fetch asset list from Google Sheets CSV ──
+function fetchAssetDB(){
+  if(!SHEET_ID)return Promise.resolve();
+  var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB)+'&t='+Date.now();
+  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},8000);
+  return fetch(url,{cache:'no-store',signal:ctrl.signal})
+    .then(function(r){clearTimeout(t);return r.text();})
+    .then(function(csv){
+      var db={},lines=csv.trim().split('\n');
+      for(var i=1;i<lines.length;i++){
+        var c=splitCSV(lines[i]);if(c.length<2)continue;
+        var code=c[0].replace(/"/g,'').trim().toUpperCase();if(!code)continue;
+        db[code]={d:c[1].replace(/"/g,'').trim(),t:(c[2]||'Equipment').replace(/"/g,'').trim(),c:(c[3]||'General').replace(/"/g,'').trim(),s:parseInt((c[4]||'24').replace(/"/g,'').trim())||24};
       }
-      return Number(value).toFixed(decimals == null ? 2 : decimals);
-    }
+      LIVE_DB=db;
+    })
+    .catch(function(){clearTimeout(t);});
+}
 
-    function updateModeUI() {
-      ids.editBanner.classList.toggle('show', state.isEdit);
-      ids.modePill.textContent = state.isEdit ? `EDIT ROW ${state.rowNumber}` : 'NEW ENTRY';
-      ids.heroMode.textContent = state.isEdit ? 'EDIT' : 'NEW';
-      ids.heroModeNote.textContent = state.isEdit
-        ? 'Saving will update the existing same-day row'
-        : 'Saving will create a new row for the selected date';
-      ids.statusBadge.textContent = state.isEdit ? 'Edit mode active' : (state.assetCode ? 'Asset loaded' : 'Awaiting scan');
-      ids.saveBtn.textContent = state.isEdit ? 'Update Entry' : 'Save Entry';
-    }
+function splitCSV(l){
+  var r=[],cur='',q=false;
+  for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;}}
+  r.push(cur);return r;
+}
 
-    function applyAsset(asset) {
-      state.asset = asset || null;
-      state.stdHours = asset && asset.stdHours ? Number(asset.stdHours) : 24;
+// ── Fetch entry status from Web App ──
+// Returns: {prevHmr, prevDate, existing:{rowNumber,hmr,brkd,fuel,remarks,brkdReason}}
+function fetchEntryStatus(code,date){
+  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE')return Promise.resolve({prevHmr:null,existing:null});
+  var url=WEBAPP_URL+'?action=check&code='+encodeURIComponent(code)+'&date='+encodeURIComponent(date)+'&t='+Date.now();
+  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},10000);
+  return fetch(url,{signal:ctrl.signal})
+    .then(function(r){clearTimeout(t);return r.json();})
+    .catch(function(){clearTimeout(t);return {prevHmr:null,existing:null};});
+}
 
-      ids.description.value = asset ? asset.description : '';
-      ids.assetType.value = asset ? asset.assetType : '';
-      ids.category.value = asset ? asset.category : '';
-      ids.stdHoursChip.textContent = `Std Hours: ${state.stdHours}`;
-      ids.makeChip.textContent = `Make: ${asset && asset.make ? asset.make : '-'}`;
-      ids.masterStatusChip.textContent = `Master Status: ${asset && asset.status ? asset.status : '-'}`;
-      ids.heroDesc.textContent = asset && asset.description ? asset.description : 'Asset not found in ASSET_MASTER';
-    }
+// ── Apply prevHmr to UI ──
+function applyPrevHmr(val){
+  if(val!==null&&val!==undefined&&!isNaN(parseFloat(val))){
+    prevHmr=parseFloat(val);
+    G('fPrevHmr').value=prevHmr;
+    G('fPrevHmr').className='fi prevhmr';
+    G('calcPrev').textContent=prevHmr;
+    G('calcPrev').className='hmr-box-val hv-prev';
+  } else {
+    prevHmr=null;
+    G('fPrevHmr').value='';
+    G('fPrevHmr').placeholder='No previous entry (first scan)';
+    G('fPrevHmr').className='fi prevhmr';
+    G('calcPrev').textContent='—';
+    G('calcPrev').className='hmr-box-val hv-empty';
+  }
+}
 
-    function applyPreviousEntry(previousEntry) {
-      state.previousEntry = previousEntry || null;
-      state.prevHmr = previousEntry && previousEntry.todayHmr !== '' ? Number(previousEntry.todayHmr) : null;
-
-      ids.prevHmr.value = state.prevHmr == null ? '' : state.prevHmr;
-      ids.prevHmrCard.textContent = state.prevHmr == null ? '-' : formatNumber(state.prevHmr, 2);
-
-      if (previousEntry) {
-        ids.prevEntryNote.textContent = `Last entry on ${previousEntry.date} with status ${previousEntry.status || 'OPERATIONAL'}.`;
-        ids.timelinePanel.innerHTML = `
-          <div class="timeline-item">
-            <div class="timeline-title">${previousEntry.assetCode} - ${previousEntry.description || 'Asset entry'}</div>
-            <div class="timeline-date">${previousEntry.date} | HMR ${formatNumber(previousEntry.todayHmr, 2)} | Fuel ${formatNumber(previousEntry.fuel || 0, 2)} L</div>
-            <div class="timeline-note">Running ${formatNumber(previousEntry.runningHrs || 0, 2)} hrs, Breakdown ${formatNumber(previousEntry.breakdownHrs || 0, 2)} hrs, Idle ${formatNumber(previousEntry.idleHrs || 0, 2)} hrs.${previousEntry.remarks ? ` Remarks: ${previousEntry.remarks}` : ''}</div>
-          </div>
-        `;
-      } else {
-        ids.prevEntryNote.textContent = 'No previous reading found yet.';
-        ids.timelinePanel.innerHTML = `
-          <div class="timeline-item">
-            <div class="timeline-title">No historical entry found</div>
-            <div class="timeline-note">Once this asset has earlier readings, the latest previous entry will appear here automatically.</div>
-          </div>
-        `;
+// ── Prefill form with existing entry data ──
+function prefillExisting(ex){
+  setEditMode(true,ex.rowNumber);
+  if(ex.hmr!==undefined&&ex.hmr!=='')G('fHmr').value=ex.hmr;
+  if(ex.brkd!==undefined)G('fBrkd').value=ex.brkd||0;
+  if(ex.fuel!==undefined)G('fFuel').value=ex.fuel||0;
+  if(ex.remarks)G('fRemarks').value=ex.remarks;
+  // Restore radio selection
+  if(ex.brkdReason){
+    var radios=document.querySelectorAll('input[name="brs"]');
+    for(var i=0;i<radios.length;i++){
+      if(radios[i].value===ex.brkdReason){
+        radios[i].checked=true;
+        radios[i].closest('.r-btn').classList.add('on');
       }
     }
+  }
+  recalcHours();
+  onBreakdown();
+  setProgress(3);
+}
 
-    function clearFormValues(keepAsset) {
-      ids.todayHmr.value = '';
-      ids.breakdownHrs.value = '';
-      ids.fuel.value = '';
-      ids.breakdownReason.value = '';
-      ids.remarks.value = '';
-      ids.computedStatus.value = 'OPERATIONAL';
+// ── Main loadAsset ──
+function loadAsset(code){
+  if(!code){renderAsset('',null);return;}
+  showLoading('Loading asset...');
+  G('aCode').textContent=code;G('fCode').value=code;
+  var date=G('fDate').value||todayISO();
+  var localA=LOCAL_DB[code];
+  if(localA){renderAsset(code,localA);stdHours=localA.s||24;}
+  Promise.all([fetchAssetDB(),fetchEntryStatus(code,date)])
+    .then(function(res){
+      hideLoading();
+      var es=res[1]||{};
+      var a=LIVE_DB[code]||LOCAL_DB[code]||null;
+      renderAsset(code,a);
+      if(a)stdHours=a.s||24;
+      applyPrevHmr(es.prevHmr);
+      if(es.existing){prefillExisting(es.existing);}
+      else{setEditMode(false);setProgress(2);}
+    })
+    .catch(function(){
+      hideLoading();
+      renderAsset(code,LOCAL_DB[code]||null);
+    });
+}
 
-      if (!keepAsset) {
-        ids.assetCode.value = '';
-        ids.description.value = '';
-        ids.assetType.value = '';
-        ids.category.value = '';
-        ids.heroCode.textContent = '-';
-        ids.heroDesc.textContent = 'Scan a QR code to begin';
+// ── Render asset UI ──
+function renderAsset(code,a){
+  G('fCode').value=code||'';G('fDesc').value=a?a.d:'';
+  if(!code){
+    G('aCode').className='a-code empty';G('aCode').textContent='NOT LOADED';
+    G('aDesc').textContent='';
+    G('statusPill').className='status-pill sp-standby';G('statusPill').innerHTML='<div class="sp-dot"></div>STANDBY';
+    G('stdLabel').textContent='Std: — hrs/day';
+    G('aChips').innerHTML='<div class="chip"><div class="chip-dot" style="background:var(--txt4)"></div>Awaiting QR scan</div>';
+    G('qrTxt').textContent='Scan machine QR code';setProgress(1);return;
+  }
+  if(a){
+    G('aCode').className='a-code';G('aCode').textContent=code;
+    G('aDesc').textContent=a.d;
+    G('statusPill').className='status-pill sp-loaded';G('statusPill').innerHTML='<div class="sp-dot"></div>LOADED';
+    G('stdLabel').textContent='Std: '+a.s+' hrs/day';
+    var cc=a.c==='Lighting'?'#f59e0b':'#3b82f6';
+    G('aChips').innerHTML='<div class="chip"><div class="chip-dot" style="background:'+cc+'"></div>'+a.t+'</div><div class="chip"><div class="chip-dot" style="background:var(--green)"></div>'+a.c+'</div><div class="chip"><div class="chip-dot" style="background:var(--txt3)"></div>Std '+a.s+'h/day</div>';
+    G('qrTxt').textContent='QR verified — '+code;G('qrTxt').style.color='var(--green)';
+    var qp=document.querySelector('.qr-pill');
+    if(qp){qp.style.background='rgba(34,197,94,.1)';qp.style.borderColor='rgba(34,197,94,.25)';}
+  } else {
+    G('aCode').textContent=code;
+    G('aDesc').textContent='Not found — add to ASSET_MASTER sheet';
+    G('statusPill').className='status-pill sp-unknown';G('statusPill').innerHTML='<div class="sp-dot"></div>NOT FOUND';
+    G('fDesc').removeAttribute('readonly');G('fDesc').placeholder='Type description manually...';G('fDesc').classList.remove('autofill');
+  }
+}
+
+// ── Recalculate hours (runs on every keystroke) ──
+function recalcHours(){
+  var todayVal=parseFloat(G('fHmr').value);
+  var brkdVal=parseFloat(G('fBrkd').value)||0;
+  if(!isNaN(todayVal)){
+    G('calcToday').textContent=todayVal;G('calcToday').className='hmr-box-val hv-today';
+  } else {
+    G('calcToday').textContent='—';G('calcToday').className='hmr-box-val hv-empty';
+  }
+  G('mBrkd').textContent=brkdVal>0?brkdVal.toFixed(1):'0';
+  if(isNaN(todayVal)){
+    G('calcRun').textContent='—';G('calcRun').className='hmr-box-val hv-empty';
+    G('mRun').textContent='—';G('mIdle').textContent='—';G('mUtil').textContent='—';
+    G('calcStatus').textContent='—';G('calcStatus').style.color='var(--txt4)';
+    G('utilFill').style.width='0';return;
+  }
+  var runHrs,hasCalc;
+  if(prevHmr!==null){runHrs=Math.max(0,todayVal-prevHmr);hasCalc=true;}
+  else{runHrs=0;hasCalc=false;}
+  var idleHrs=Math.max(0,stdHours-runHrs-brkdVal);
+  var util=stdHours>0?Math.min(100,(runHrs/stdHours*100)):0;
+  G('calcRun').textContent=hasCalc?runHrs.toFixed(1):'?';
+  G('calcRun').className='hmr-box-val '+(hasCalc?'hv-run':'hv-empty');
+  G('mRun').textContent=hasCalc?runHrs.toFixed(1):'—';
+  G('mIdle').textContent=hasCalc?idleHrs.toFixed(1):'—';
+  G('mUtil').textContent=hasCalc?util.toFixed(1)+'%':'—';
+  var fill=G('utilFill');
+  fill.style.width=(hasCalc?util:0)+'%';
+  fill.style.background=util>=75?'var(--green)':util>=40?'var(--amber)':'var(--red)';
+  if(!hasCalc){G('calcStatus').textContent='No prev entry';G('calcStatus').style.color='var(--amber)';}
+  else if(brkdVal>0){G('calcStatus').textContent='BREAKDOWN';G('calcStatus').style.color='var(--red)';}
+  else{G('calcStatus').textContent=util.toFixed(1)+'% util';G('calcStatus').style.color=util>=75?'var(--green)':'var(--amber)';}
+  if(!isNaN(todayVal)&&todayVal>0)setProgress(3);
+}
+
+// ── Breakdown section toggle ──
+function onBreakdown(){
+  var v=parseFloat(G('fBrkd').value)||0;
+  G('bLocked').style.display=v>0?'none':'block';
+  G('bGrid').style.display=v>0?'grid':'none';
+  if(v>0){G('statusPill').className='status-pill sp-brkd';G('statusPill').innerHTML='<div class="sp-dot"></div>BREAKDOWN';}
+  else if(G('fCode').value){
+    if(isEditMode){G('statusPill').className='status-pill sp-edit';G('statusPill').innerHTML='<div class="sp-dot"></div>EDIT MODE';}
+    else{G('statusPill').className='status-pill sp-loaded';G('statusPill').innerHTML='<div class="sp-dot"></div>OPERATIONAL';}
+  }
+  recalcHours();
+}
+
+// ── Date change: re-check entry status ──
+function onDateChange(){
+  var code=G('fCode').value.trim();if(!code)return;
+  G('fPrevHmr').value='Checking...';
+  fetchEntryStatus(code,G('fDate').value)
+    .then(function(es){
+      es=es||{};
+      applyPrevHmr(es.prevHmr);
+      if(es.existing){prefillExisting(es.existing);}
+      else{
+        setEditMode(false);
+        G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';
+        document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
+        document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
+        G('bLocked').style.display='block';G('bGrid').style.display='none';
+        recalcHours();setProgress(2);
       }
-    }
+    });
+}
 
-    function applyExistingEntry(existingEntry) {
-      state.existingEntry = existingEntry || null;
-      state.isEdit = !!existingEntry;
-      state.rowNumber = existingEntry ? existingEntry.rowNumber : null;
-      updateModeUI();
+// ── Submit ──
+function doSubmit(){
+  var code=G('fCode').value.trim(),desc=G('fDesc').value.trim();
+  var date=G('fDate').value,hmrStr=G('fHmr').value;
+  var brkdStr=G('fBrkd').value,fuelStr=G('fFuel').value,remarks=G('fRemarks').value;
+  if(!code){alert('No asset loaded. Scan the QR code first.');return;}
+  if(!date){alert('Please select the report date.');return;}
+  if(!hmrStr){alert("Please enter today's HMR reading.");return;}
+  if(fuelStr===''){G('eFuel').classList.add('show');return;}
+  G('eFuel').classList.remove('show');
+  var hmrNum=parseFloat(hmrStr),brkdNum=parseFloat(brkdStr)||0,fuelNum=parseFloat(fuelStr)||0;
+  if(prevHmr!==null&&hmrNum<prevHmr){alert("ERROR: Today's HMR ("+hmrNum+") < Previous HMR ("+prevHmr+").\n\nHMR is cumulative and always increases.");return;}
+  var brsEl=document.querySelector('input[name="brs"]:checked');
+  if(brkdNum>0&&!brsEl){G('eBrkdR').classList.add('show');return;}
+  G('eBrkdR').classList.remove('show');
+  var runHrs=prevHmr!==null?Math.max(0,hmrNum-prevHmr):0;
+  var idleHrs=Math.max(0,stdHours-runHrs-brkdNum);
+  var util=stdHours>0?(runHrs/stdHours*100).toFixed(1):'0';
+  var payload={
+    isEdit:isEditMode,rowNumber:editRowNum,date:date,
+    assetCode:code,description:desc||code,
+    prevHmr:prevHmr!==null?prevHmr:'',todayHmr:hmrNum,
+    runningHrs:runHrs.toFixed(2),breakdownHrs:brkdNum,
+    idleHrs:idleHrs.toFixed(2),stdHours:stdHours,utilization:util,
+    fuel:fuelNum,brkdReason:brsEl?brsEl.value:'',
+    status:brkdNum>0?'BREAKDOWN':'OPERATIONAL',
+    remarks:remarks,timestamp:new Date().toISOString()
+  };
+  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE'){showSuccess(payload);return;}
+  var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
+  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(){showSuccess(payload);})
+    .catch(function(){showSuccess(payload);})
+    .finally(function(){btn.disabled=false;btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';});
+}
 
-      if (!existingEntry) {
-        clearFormValues(true);
-        recalculate();
-        return;
-      }
+function showSuccess(p){
+  G('sTitle').textContent=p.isEdit?'Entry Updated':'Submitted';
+  G('sAsset').textContent=p.assetCode+' — '+p.description;
+  G('sSummary').innerHTML='HMR: '+p.todayHmr+' &nbsp;|&nbsp; Running: '+p.runningHrs+' hrs &nbsp;|&nbsp; Idle: '+p.idleHrs+' hrs'+(p.breakdownHrs>0?'<br>Breakdown: '+p.breakdownHrs+' hrs — '+p.brkdReason:'')+'<br>Fuel: '+p.fuel+' L &nbsp;|&nbsp; Utilization: '+p.utilization+'%';
+  G('sTs').textContent='Logged: '+new Date().toLocaleString('en-IN');
+  G('successScreen').classList.add('show');
+}
 
-      ids.todayHmr.value = existingEntry.todayHmr !== '' ? existingEntry.todayHmr : '';
-      ids.breakdownHrs.value = existingEntry.breakdownHrs !== '' ? existingEntry.breakdownHrs : '';
-      ids.fuel.value = existingEntry.fuel !== '' ? existingEntry.fuel : '';
-      ids.breakdownReason.value = existingEntry.brkdReason || '';
-      ids.remarks.value = existingEntry.remarks || '';
-      ids.computedStatus.value = existingEntry.status || 'OPERATIONAL';
-      recalculate();
-    }
+function resetForm(){
+  G('successScreen').classList.remove('show');
+  G('fDate').value=todayISO();G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';
+  document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
+  G('bLocked').style.display='block';G('bGrid').style.display='none';
+  G('eFuel').classList.remove('show');G('eBrkdR').classList.remove('show');
+  setEditMode(false);prevHmr=null;recalcHours();
+  setProgress(G('fCode').value?2:1);
+}
 
-    function recalculate() {
-      const todayHmr = Number(ids.todayHmr.value || 0);
-      const breakdownHrs = Number(ids.breakdownHrs.value || 0);
-      const hasTodayHmr = ids.todayHmr.value !== '';
-      const running = state.prevHmr == null || !hasTodayHmr ? 0 : Math.max(0, todayHmr - state.prevHmr);
-      const idle = Math.max(0, state.stdHours - running - breakdownHrs);
-      const utilization = state.stdHours > 0 ? Math.min(100, (running / state.stdHours) * 100) : 0;
-      const status = breakdownHrs > 0 ? 'BREAKDOWN' : 'OPERATIONAL';
-
-      ids.runningCard.textContent = hasTodayHmr && state.prevHmr != null ? formatNumber(running, 2) : '0';
-      ids.idleCard.textContent = hasTodayHmr ? formatNumber(idle, 2) : '0';
-      ids.breakdownCard.textContent = formatNumber(breakdownHrs, 2);
-      ids.utilizationCard.textContent = `${formatNumber(utilization, 1)}%`;
-      ids.utilCard.textContent = `${formatNumber(utilization, 1)}%`;
-      ids.statusLine.textContent = status;
-      ids.statusNote.textContent = breakdownHrs > 0
-        ? `Breakdown entry active for ${formatNumber(breakdownHrs, 2)} hour(s).`
-        : 'Operational entry with live utilization calculation.';
-      ids.computedStatus.value = status;
-      ids.utilBar.style.width = `${Math.max(0, Math.min(100, utilization))}%`;
-
-      if (breakdownHrs <= 0) {
-        ids.breakdownReason.value = '';
-      }
-    }
-
-    async function loadContext() {
-      const assetCode = ids.assetCode.value.trim().toUpperCase();
-      const reportDate = ids.reportDate.value;
-
-      state.assetCode = assetCode;
-      state.reportDate = reportDate;
-      ids.heroCode.textContent = assetCode || '-';
-      ids.heroDate.textContent = reportDate || '-';
-
-      if (!assetCode) {
-        clearFormValues();
-        applyAsset(null);
-        applyPreviousEntry(null);
-        applyExistingEntry(null);
-        updateModeUI();
-        return;
-      }
-
-      setOverlay(true, 'Loading asset and previous entry...');
-
-      try {
-        const response = await serverCall('getInitialData', [assetCode, reportDate]);
-        if (!response || !response.ok) {
-          throw new Error(response && response.error ? response.error : 'Unable to load asset context.');
-        }
-
-        applyAsset(response.asset);
-        applyPreviousEntry(response.previousEntry);
-        applyExistingEntry(response.existingEntry);
-
-        if (response.duplicateCount > 1) {
-          showToast(`Warning: ${response.duplicateCount} same-day rows already exist for this asset. New saves will update the latest one.`, true);
-        }
-      } catch (error) {
-        applyAsset(null);
-        applyPreviousEntry(null);
-        applyExistingEntry(null);
-        showToast(error.message || 'Failed to load asset data.', true);
-      } finally {
-        setOverlay(false);
-      }
-    }
-
-    async function saveEntry() {
-      const assetCode = ids.assetCode.value.trim().toUpperCase();
-      const reportDate = ids.reportDate.value;
-      const todayHmrRaw = ids.todayHmr.value;
-      const breakdownHrs = Number(ids.breakdownHrs.value || 0);
-      const breakdownReason = ids.breakdownReason.value;
-      const fuel = Number(ids.fuel.value || 0);
-      const remarks = ids.remarks.value.trim();
-
-      if (!assetCode) {
-        showToast('QR asset code is missing in the URL.', true);
-        return;
-      }
-      if (!reportDate) {
-        showToast('Please select a report date.', true);
-        return;
-      }
-      if (todayHmrRaw === '') {
-        showToast('Please enter today HMR.', true);
-        return;
-      }
-      if (state.prevHmr != null && Number(todayHmrRaw) < state.prevHmr) {
-        showToast(`Today HMR cannot be less than previous HMR ${state.prevHmr}.`, true);
-        return;
-      }
-      if (breakdownHrs > 0 && !breakdownReason) {
-        showToast('Select a breakdown reason when breakdown hours are entered.', true);
-        return;
-      }
-
-      const todayHmr = Number(todayHmrRaw);
-      const runningHrs = state.prevHmr == null ? 0 : Math.max(0, todayHmr - state.prevHmr);
-      const idleHrs = Math.max(0, state.stdHours - runningHrs - breakdownHrs);
-      const utilization = state.stdHours > 0 ? Number(((runningHrs / state.stdHours) * 100).toFixed(1)) : 0;
-      const payload = {
-        rowNumber: state.rowNumber,
-        assetCode: assetCode,
-        date: reportDate,
-        description: ids.description.value || assetCode,
-        prevHmr: state.prevHmr == null ? '' : state.prevHmr,
-        todayHmr: todayHmr,
-        runningHrs: Number(runningHrs.toFixed(2)),
-        breakdownHrs: Number(breakdownHrs.toFixed(2)),
-        idleHrs: Number(idleHrs.toFixed(2)),
-        stdHours: state.stdHours,
-        utilization: utilization,
-        fuel: Number(fuel.toFixed(2)),
-        brkdReason: breakdownHrs > 0 ? breakdownReason : '',
-        status: breakdownHrs > 0 ? 'BREAKDOWN' : 'OPERATIONAL',
-        remarks: remarks
-      };
-
-      ids.saveBtn.disabled = true;
-      setOverlay(true, state.isEdit ? 'Updating existing row...' : 'Saving new entry...');
-
-      try {
-        const result = await serverCall('saveInspection', [payload]);
-        if (!result || !result.ok) {
-          throw new Error(result && result.error ? result.error : 'Save failed.');
-        }
-        showToast(state.isEdit ? 'Entry updated successfully.' : 'Entry saved successfully.');
-        await loadContext();
-      } catch (error) {
-        showToast(error.message || 'Unable to save entry.', true);
-      } finally {
-        ids.saveBtn.disabled = false;
-        setOverlay(false);
-      }
-    }
-
-    function bootstrap() {
-      const sessionId = `SESSION ${Date.now().toString(36).toUpperCase()}`;
-      ids.sessionText.textContent = sessionId;
-      ids.reportDate.value = todayInTimezone();
-      ids.heroDate.textContent = ids.reportDate.value;
-
-      const assetCode = getQueryAssetCode();
-      ids.assetCode.value = assetCode;
-      ids.heroCode.textContent = assetCode || '-';
-
-      ids.reportDate.addEventListener('change', loadContext);
-      ids.todayHmr.addEventListener('input', recalculate);
-      ids.breakdownHrs.addEventListener('input', recalculate);
-      ids.saveBtn.addEventListener('click', saveEntry);
-
-      updateModeUI();
-      loadContext();
-    }
-
-    document.addEventListener('DOMContentLoaded', bootstrap);
-  </script>
+document.addEventListener('DOMContentLoaded',function(){
+  setInterval(tick,1000);tick();
+  G('fDate').value=todayISO();
+  var sid='RPT-'+Date.now().toString(36).toUpperCase().slice(-6);
+  G('sessionId').textContent='SESSION '+sid;G('sSessId').textContent=sid;
+  document.querySelectorAll('.r-btn input').forEach(function(r){
+    r.addEventListener('change',function(){
+      document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
+      this.closest('.r-btn').classList.add('on');setProgress(4);
+    });
+  });
+  loadAsset(readQR());
+});
+</script>
 </body>
 </html>

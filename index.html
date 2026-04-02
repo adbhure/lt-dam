@@ -3,942 +3,581 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>L&T MAHSR C3 — Daily Asset Monitoring</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>L&T AssetOps — Daily Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ╔══════════════════════════════════════╗
-   ║  DESIGN TOKENS                       ║
-   ╚══════════════════════════════════════╝ */
 :root{
-  --void:    #04080f;
-  --abyss:   #070d18;
-  --deep:    #0a1220;
-  --base:    #0e1828;
-  --surface: #131f30;
-  --raised:  #192639;
-  --card:    #1d2c40;
-  --rim:     #223345;
-  --rim2:    #2a3f58;
-  --rim3:    #344f6e;
-
-  /* L&T Brand Red */
-  --lt:      #e8001d;
-  --lt2:     #c0001a;
-  --lt-g:    rgba(232,0,29,.18);
-  --lt-s:    rgba(232,0,29,.08);
-
-  /* Accent Blue */
-  --sky:     #0ea5e9;
-  --sky2:    #0284c7;
-  --sky-g:   rgba(14,165,233,.16);
-  --sky-s:   rgba(14,165,233,.07);
-
-  /* States */
-  --go:      #10b981;
-  --go-g:    rgba(16,185,129,.16);
-  --go-s:    rgba(16,185,129,.07);
-  --warn:    #f59e0b;
-  --warn-g:  rgba(245,158,11,.16);
-  --alert:   #ef4444;
-  --alert-g: rgba(239,68,68,.16);
-  --alert-s: rgba(239,68,68,.07);
-
-  --txt:     #e2ecff;
-  --txt2:    #7b96bc;
-  --txt3:    #3c5574;
-  --txt4:    #243d59;
-
-  --sans:    'Barlow',sans-serif;
-  --cond:    'Barlow Condensed',sans-serif;
-  --mono:    'JetBrains Mono',monospace;
-  --r:       9px;
-  --r2:      16px;
+  --bg:#0f1117; --bg2:#161b24; --bg3:#1c2433;
+  --card:#1e2738; --card2:#242f42;
+  --border:#2a3a52; --border2:#354a68;
+  --lt-red:#e8001d; --lt-dark:#b50018;
+  --blue:#3b82f6; --blue2:#2563eb;
+  --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --purple:#a855f7;
+  --txt:#f1f5ff; --txt2:#8899bb; --txt3:#4a5e7a; --txt4:#2d3d55;
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+  --rad:12px; --rad2:18px;
 }
-
-/* ╔══════════════════════════════════════╗
-   ║  RESET & BASE                        ║
-   ╚══════════════════════════════════════╝ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+html{-webkit-text-size-adjust:100%;}
 body{
   font-family:var(--sans);
-  background:var(--void);
+  background:var(--bg);
   color:var(--txt);
   min-height:100vh;
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
-  position:relative;
+  padding-bottom:100px;
 }
-
-/* ── Animated dot-matrix background ── */
 body::before{
-  content:'';
-  position:fixed;inset:0;z-index:0;
-  background-image:radial-gradient(circle,rgba(14,165,233,.09) 1px,transparent 1px);
-  background-size:30px 30px;
-  animation:bgDrift 40s linear infinite;
-  pointer-events:none;
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%,rgba(59,130,246,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 20% 80%,rgba(232,0,29,.04) 0%,transparent 60%);
 }
-@keyframes bgDrift{0%{background-position:0 0}100%{background-position:30px 30px}}
+.page{position:relative;z-index:1;max-width:520px;margin:0 auto;}
 
-/* ── Radial vignette ── */
-body::after{
-  content:'';
-  position:fixed;inset:0;z-index:0;
-  background:radial-gradient(ellipse 90% 70% at 50% -10%,transparent 30%,rgba(4,8,15,.96) 100%);
-  pointer-events:none;
+/* TOPBAR */
+.topbar{
+  background:rgba(14,17,23,.95);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
 }
-
-/* ── Animated accent line at very top ── */
-.top-accent{
-  position:fixed;top:0;left:0;right:0;height:2px;z-index:200;
-  background:linear-gradient(90deg,var(--lt) 0%,#ff6b35 30%,var(--sky) 60%,var(--lt) 100%);
-  background-size:200% 100%;
-  animation:accentFlow 4s linear infinite;
-}
-@keyframes accentFlow{0%{background-position:0%}100%{background-position:200%}}
-
-.page{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:2px 0 90px;}
-
-/* ╔══════════════════════════════════════╗
-   ║  HEADER                              ║
-   ╚══════════════════════════════════════╝ */
-.header{
-  background:rgba(7,13,24,.95);
-  backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--rim);
-  position:sticky;top:2px;z-index:100;
-}
-
-/* ── Row 1: L&T Logo + Title + Status ── */
-.header-row1{
-  display:flex;align-items:center;gap:0;
-  padding:0 20px;
-  height:56px;
-  border-bottom:1px solid var(--rim);
-}
-
-/* L&T LOGO — premium version */
-.lt-logo{
-  display:flex;align-items:center;gap:10px;
-  flex-shrink:0;text-decoration:none;
-}
-.lt-emblem{
-  width:46px;height:38px;
-  background:var(--lt);
-  border-radius:5px;
+.lt-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.lt-badge{
+  background:var(--lt-red);border-radius:8px;width:40px;height:32px;
   display:flex;align-items:center;justify-content:center;
-  position:relative;overflow:hidden;
-  box-shadow:0 0 20px var(--lt-g),0 4px 12px rgba(0,0,0,.5);
-  flex-shrink:0;
+  font-family:var(--sans);font-size:14px;font-weight:800;color:#fff;letter-spacing:-.5px;
+  box-shadow:0 0 16px rgba(232,0,29,.35);flex-shrink:0;
 }
-.lt-emblem::before{
-  content:'';
-  position:absolute;top:0;left:0;right:0;height:50%;
-  background:rgba(255,255,255,.12);
-}
-.lt-emblem::after{
-  content:'';
-  position:absolute;bottom:-8px;right:-8px;
-  width:24px;height:24px;
-  background:rgba(255,255,255,.06);
-  border-radius:50%;
-}
-.lt-letters{
-  font-family:var(--cond);
-  font-size:20px;font-weight:900;
-  color:#fff;letter-spacing:1px;
-  position:relative;z-index:1;
-}
-.lt-name-stack{display:flex;flex-direction:column;gap:1px;}
-.lt-name{
-  font-family:var(--cond);
-  font-size:13px;font-weight:700;
-  color:var(--txt);letter-spacing:.5px;line-height:1;
-}
-.lt-sub{
-  font-family:var(--mono);
-  font-size:8px;color:var(--txt3);
-  letter-spacing:1px;text-transform:uppercase;
-}
+.lt-text{display:flex;flex-direction:column;gap:1px;}
+.lt-company{font-size:12px;font-weight:700;color:var(--txt);letter-spacing:.3px;line-height:1;}
+.lt-project{font-family:var(--mono);font-size:8.5px;color:var(--txt3);letter-spacing:.5px;}
+.topbar-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+.live-row{display:flex;align-items:center;gap:5px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.live-label{font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:1px;}
+.clock-val{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:.5px;}
+.clock-date{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.3px;}
 
-/* Vertical separator */
-.v-sep{
-  width:1px;height:32px;
-  background:var(--rim2);
-  margin:0 16px;
-  flex-shrink:0;
+/* PROJECT BANNER */
+.proj-banner{
+  background:rgba(232,0,29,.07);border-bottom:1px solid rgba(232,0,29,.15);
+  padding:8px 16px;display:flex;align-items:center;justify-content:space-between;
 }
+.pb-left{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,100,100,.85);}
+.pb-right{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;}
 
-/* Project title */
-.project-title{
-  flex:1;
-  display:flex;flex-direction:column;gap:2px;
+/* EDIT ALERT */
+.edit-alert{
+  display:none;margin:12px 14px 0;
+  background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.06));
+  border:1px solid rgba(245,158,11,.35);border-left:3px solid var(--amber);
+  border-radius:var(--rad);padding:11px 14px;gap:10px;align-items:flex-start;
 }
-.project-main{
-  font-family:var(--cond);
-  font-size:15px;font-weight:800;
-  letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--txt);line-height:1;
-}
-.project-main span{color:var(--sky);}
-.project-sub{
-  font-family:var(--mono);
-  font-size:9px;color:var(--txt3);
-  letter-spacing:1px;text-transform:uppercase;
-}
+.edit-alert.show{display:flex;}
+.ea-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.ea-title{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--amber);margin-bottom:3px;}
+.ea-desc{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.3px;line-height:1.5;}
 
-/* Live + clock */
-.header-right{
-  display:flex;flex-direction:column;align-items:flex-end;gap:3px;
-  flex-shrink:0;
-}
-.live-pill{
-  display:flex;align-items:center;gap:5px;
-  background:var(--go-s);border:1px solid rgba(16,185,129,.25);
-  border-radius:20px;padding:3px 9px;
-  font-family:var(--mono);font-size:9px;color:var(--go);letter-spacing:.5px;
-}
-.live-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:var(--go);box-shadow:0 0 8px var(--go);
-  animation:heartbeat 2s ease-in-out infinite;
-}
-@keyframes heartbeat{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.6);opacity:.4}}
-.hdr-clock{font-family:var(--mono);font-size:11px;color:var(--sky);letter-spacing:.5px;}
-.hdr-date{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.3px;}
-
-/* ── Row 2: Project banner ── */
-.header-row2{
-  padding:8px 20px;
-  background:rgba(232,0,29,.06);
-  border-bottom:1px solid rgba(232,0,29,.15);
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
-.project-banner-txt{
-  font-family:var(--cond);
-  font-size:14px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;
-  color:rgba(255,100,100,.9);
-}
-.project-banner-right{
-  display:flex;align-items:center;gap:6px;
-  font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;
-}
-.banner-sep{width:3px;height:3px;border-radius:50%;background:var(--rim3);}
-
-/* ╔══════════════════════════════════════╗
-   ║  ASSET HERO BLOCK                    ║
-   ╚══════════════════════════════════════╝ */
+/* ASSET HERO */
 .asset-hero{
-  background:linear-gradient(180deg,rgba(14,22,40,.98) 0%,rgba(10,18,32,.95) 100%);
-  border-bottom:1px solid var(--rim);
-  padding:20px 20px 18px;
-  position:relative;overflow:hidden;
+  margin:14px 14px 0;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--rad2);padding:16px;position:relative;overflow:hidden;
 }
-/* Subtle grid lines behind hero */
 .asset-hero::before{
-  content:'';
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(var(--rim) 1px,transparent 1px),
-    linear-gradient(90deg,var(--rim) 1px,transparent 1px);
-  background-size:60px 60px;
-  opacity:.3;
-  pointer-events:none;
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--lt-red),var(--blue));
 }
-
-/* QR indicator */
-.qr-indicator{
-  display:inline-flex;align-items:center;gap:7px;
-  background:var(--sky-s);border:1px solid rgba(14,165,233,.2);
-  border-radius:7px;padding:5px 11px;
-  margin-bottom:14px;
+.qr-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);
+  border-radius:20px;padding:4px 10px;margin-bottom:12px;
 }
-.qr-grid-icon{
-  display:grid;grid-template-columns:repeat(3,5px);
-  grid-template-rows:repeat(3,5px);gap:1.5px;
+.qr-icon{display:grid;grid-template-columns:repeat(3,4px);gap:1.5px;}
+.qr-icon span{border-radius:1px;}
+.qr-on{background:var(--blue);}
+.qr-off{background:transparent;}
+.qr-txt{font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:.8px;text-transform:uppercase;}
+.asset-main{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.a-label{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;display:block;}
+.a-code{font-size:28px;font-weight:800;letter-spacing:1px;color:var(--blue);line-height:1;min-height:34px;display:flex;align-items:center;}
+.a-code.empty{color:var(--txt4);font-size:16px;font-weight:400;font-family:var(--mono);}
+.a-desc{font-family:var(--mono);font-size:10px;color:var(--green);margin-top:4px;display:flex;align-items:center;gap:4px;}
+.a-desc::before{content:'▶';font-size:7px;}
+.a-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.status-pill{
+  display:flex;align-items:center;gap:5px;border-radius:20px;padding:4px 10px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.5px;
+  border:1px solid transparent;white-space:nowrap;
 }
-.qr-cell{border-radius:1px;}
-.qr-cell.on{background:var(--sky);}
-.qr-cell.off{background:transparent;}
-.qr-indicator-txt{
-  font-family:var(--mono);font-size:9px;
-  color:var(--sky);letter-spacing:.8px;text-transform:uppercase;
-}
-
-/* Asset code big display */
-.asset-display{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
-  position:relative;z-index:1;
-}
-.asset-left{}
-.asset-code-label{
-  font-family:var(--mono);font-size:8px;
-  color:var(--txt4);letter-spacing:2px;text-transform:uppercase;
-  display:block;margin-bottom:5px;
-}
-.asset-code-big{
-  font-family:var(--cond);
-  font-size:36px;font-weight:900;
-  letter-spacing:2px;line-height:1;
-  color:var(--sky);
-  text-shadow:0 0 30px var(--sky-g);
-  min-height:42px;
-  display:flex;align-items:center;
-}
-.asset-code-big.empty{
-  color:var(--txt4);font-size:18px;font-weight:400;
-  font-family:var(--mono);letter-spacing:1px;
-}
-.asset-desc-line{
-  font-family:var(--mono);font-size:11px;
-  color:var(--go);margin-top:5px;
-  display:flex;align-items:center;gap:6px;
-  min-height:18px;
-}
-.asset-desc-line::before{content:'►';font-size:7px;}
-
-/* Status badge stack */
-.asset-right{
-  display:flex;flex-direction:column;
-  align-items:flex-end;gap:6px;
-  flex-shrink:0;
-}
-.status-tag{
-  display:flex;align-items:center;gap:5px;
-  border-radius:20px;padding:4px 10px;
-  font-family:var(--mono);font-size:9px;
-  letter-spacing:.5px;border:1px solid transparent;
-  white-space:nowrap;
-}
-.status-tag.idle {background:rgba(60,85,116,.2);border-color:var(--rim2);color:var(--txt3);}
-.status-tag.ok   {background:var(--go-s);border-color:rgba(16,185,129,.25);color:var(--go);}
-.status-tag.brkd {background:var(--alert-s);border-color:rgba(239,68,68,.25);color:var(--alert);}
-.stag-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
-.std-tag{font-family:var(--mono);font-size:9px;color:var(--txt4);letter-spacing:.3px;text-align:right;}
-
-/* Asset meta chips */
-.asset-chips{
-  display:flex;flex-wrap:wrap;gap:6px;
-  margin-top:14px;position:relative;z-index:1;
-}
+.sp-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.sp-standby{background:rgba(74,94,122,.2);border-color:var(--border2);color:var(--txt3);}
+.sp-loaded{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.25);color:var(--green);}
+.sp-edit{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25);color:var(--amber);}
+.sp-brkd{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:var(--red);}
+.sp-unknown{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.25);color:var(--purple);}
+.std-label{font-family:var(--mono);font-size:9px;color:var(--txt4);text-align:right;}
+.asset-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
 .chip{
   display:flex;align-items:center;gap:4px;
-  background:rgba(255,255,255,.03);
-  border:1px solid var(--rim2);
-  border-radius:20px;padding:3px 10px;
-  font-family:var(--mono);font-size:9px;
-  color:var(--txt3);letter-spacing:.3px;
-  transition:border-color .2s,color .2s;
+  background:rgba(255,255,255,.03);border:1px solid var(--border2);
+  border-radius:20px;padding:3px 9px;
+  font-family:var(--mono);font-size:8.5px;color:var(--txt3);letter-spacing:.3px;
 }
 .chip-dot{width:4px;height:4px;border-radius:50%;}
 
-/* ╔══════════════════════════════════════╗
-   ║  PROGRESS STRIP                      ║
-   ╚══════════════════════════════════════╝ */
-.prog-strip{
-  padding:9px 20px 10px;
-  background:var(--abyss);
-  border-bottom:1px solid var(--rim);
+/* PROGRESS */
+.prog-wrap{padding:10px 14px 0;}
+.prog-steps{display:flex;gap:4px;margin-bottom:5px;}
+.p-step{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background .3s;}
+.p-step.done{background:var(--green);}
+.p-step.active{background:var(--blue);}
+.p-label{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;}
+
+/* SECTIONS */
+.section{
+  margin:12px 14px 0;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--rad2);overflow:hidden;
+  animation:slideUp .4s ease both;
+}
+.section:nth-child(2){animation-delay:.05s}
+.section:nth-child(3){animation-delay:.1s}
+.section:nth-child(4){animation-delay:.15s}
+.section:nth-child(5){animation-delay:.2s}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.sec-head{
   display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  background:rgba(59,130,246,.03);
 }
-.prog-bars{display:flex;gap:4px;flex:1;}
-.pb{height:3px;flex:1;border-radius:2px;background:var(--rim);transition:background .3s,transform .3s;}
-.pb.done{background:var(--go);}
-.pb.active{background:var(--sky);transform:scaleY(1.5);}
-.prog-txt{
-  font-family:var(--mono);font-size:9px;
-  color:var(--txt3);letter-spacing:.5px;
-  white-space:nowrap;flex-shrink:0;
+.sec-num{
+  width:24px;height:24px;min-width:24px;border:1.5px solid var(--blue);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10px;font-weight:600;color:var(--blue);
 }
-
-/* ╔══════════════════════════════════════╗
-   ║  SECTION CARDS                       ║
-   ╚══════════════════════════════════════╝ */
-.card{
-  margin:14px 14px 0;
-  background:var(--surface);
-  border:1px solid var(--rim);
-  border-radius:var(--r2);
-  overflow:hidden;
-  animation:riseUp .5s cubic-bezier(.22,.68,0,1.2) both;
-}
-.card:nth-child(1){animation-delay:.05s}
-.card:nth-child(2){animation-delay:.10s}
-.card:nth-child(3){animation-delay:.15s}
-.card:nth-child(4){animation-delay:.20s}
-.card:nth-child(5){animation-delay:.25s}
-@keyframes riseUp{
-  0%{opacity:0;transform:translateY(20px) scale(.97)}
-  100%{opacity:1;transform:translateY(0) scale(1)}
-}
-
-.card-head{
-  display:flex;align-items:center;gap:10px;
-  padding:11px 16px;
-  border-bottom:1px solid var(--rim);
-  background:rgba(14,165,233,.04);
-  position:relative;overflow:hidden;
-}
-/* Shimmer on card heads */
-.card-head::after{
-  content:'';
-  position:absolute;top:0;left:-100%;width:40%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);
-  animation:shimmer 4s ease-in-out infinite;
-}
-@keyframes shimmer{0%,100%{left:-100%}50%{left:120%}}
-
-.card-num{
-  width:24px;height:24px;min-width:24px;
-  border:1.5px solid var(--sky);
-  border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:10px;font-weight:600;
-  color:var(--sky);
-}
-.card-num.red{border-color:var(--alert);color:var(--alert);}
-.card-num.amber{border-color:var(--warn);color:var(--warn);}
-
-.card-title{
-  font-family:var(--cond);font-size:13px;font-weight:700;
-  letter-spacing:2.5px;text-transform:uppercase;color:var(--txt2);
-}
-.card-title.red{color:rgba(239,68,68,.8);}
-
-.card-badge{
-  margin-left:auto;border-radius:20px;padding:2px 9px;
+.sec-num.amber{border-color:var(--amber);color:var(--amber);}
+.sec-num.red{border-color:var(--red);color:var(--red);}
+.sec-title{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);}
+.sec-title.red{color:rgba(239,68,68,.8);}
+.sec-badge{
+  margin-left:auto;border-radius:20px;padding:2px 8px;
   font-family:var(--mono);font-size:8px;letter-spacing:.5px;
-  background:var(--sky-s);border:1px solid rgba(14,165,233,.2);color:var(--sky);
+  background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue);
 }
-.card-badge.red{background:var(--alert-s);border-color:rgba(239,68,68,.2);color:var(--alert);}
-.card-badge.go {background:var(--go-s);border-color:rgba(16,185,129,.2);color:var(--go);}
-.card-badge.dim{background:rgba(255,255,255,.02);border-color:var(--rim2);color:var(--txt3);}
+.sec-badge.green{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2);color:var(--green);}
+.sec-badge.red{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:var(--red);}
+.sec-badge.dim{background:rgba(255,255,255,.02);border-color:var(--border2);color:var(--txt3);}
+.sec-body{padding:16px;}
 
-.card-body{padding:16px;}
-
-/* ╔══════════════════════════════════════╗
-   ║  FORM FIELDS                         ║
-   ╚══════════════════════════════════════╝ */
+/* FIELDS */
 .field{margin-bottom:14px;}
 .field:last-child{margin-bottom:0;}
-
-.fl{
-  font-family:var(--mono);font-size:8.5px;
-  letter-spacing:1.5px;text-transform:uppercase;
-  color:var(--txt3);margin-bottom:6px;
+.f-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--txt3);margin-bottom:6px;
   display:flex;align-items:center;gap:6px;
 }
-.req{color:var(--lt);font-size:12px;line-height:1;}
-.fhint{font-size:8px;color:var(--txt4);letter-spacing:.3px;margin-left:auto;font-style:italic;}
-
-input.fi, select.fi, textarea.fi{
-  width:100%;
-  background:var(--deep);
-  border:1px solid var(--rim2);
-  border-radius:var(--r);
-  padding:12px 14px;
+.f-req{color:var(--lt-red);font-size:12px;line-height:1;}
+.f-hint{font-size:8px;color:var(--txt4);letter-spacing:.3px;margin-left:auto;}
+input.fi,select.fi,textarea.fi{
+  width:100%;background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--rad);padding:12px 14px;
   font-family:var(--sans);font-size:14px;color:var(--txt);
-  outline:none;
-  transition:border-color .2s,box-shadow .2s,background .2s;
+  outline:none;transition:border-color .2s,box-shadow .2s,background .2s;
   appearance:none;-webkit-appearance:none;
 }
 input.fi:focus,select.fi:focus,textarea.fi:focus{
-  border-color:var(--sky);
-  background:rgba(14,165,233,.04);
-  box-shadow:0 0 0 3px var(--sky-g);
+  border-color:var(--blue);background:rgba(59,130,246,.04);
+  box-shadow:0 0 0 3px rgba(59,130,246,.15);
 }
 input.fi::placeholder,textarea.fi::placeholder{color:var(--txt4);}
 input[type=date].fi{color-scheme:dark;}
-
-/* Special states */
 .fi.ro{
-  background:rgba(14,165,233,.06);
-  border-color:rgba(14,165,233,.3);
-  color:var(--sky);font-weight:700;
-  font-family:var(--mono);font-size:15px;
-  letter-spacing:.5px;cursor:not-allowed;
+  background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.3);
+  color:var(--blue);font-weight:700;font-family:var(--mono);
+  font-size:14px;letter-spacing:.5px;cursor:not-allowed;
 }
 .fi.autofill{
-  background:var(--go-s);
-  border-color:rgba(16,185,129,.35);
-  color:var(--go);font-weight:600;
+  background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.3);
+  color:var(--green);font-weight:600;cursor:not-allowed;
 }
-
+.fi.prevhmr{
+  background:rgba(59,130,246,.05);border-color:rgba(59,130,246,.25);
+  color:var(--blue);font-weight:600;font-family:var(--mono);cursor:not-allowed;
+}
 select.fi{
   cursor:pointer;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230ea5e9' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;
-  background-position:right 14px center;
-  padding-right:36px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%233b82f6' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;
 }
-select.fi option{background:var(--raised);}
+select.fi option{background:var(--card);}
+textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
+.err-msg{font-family:var(--mono);font-size:9px;color:var(--red);margin-top:4px;display:none;letter-spacing:.3px;}
+.err-msg.show{display:block;}
 
-textarea.fi{resize:none;height:80px;line-height:1.65;font-size:13px;}
-
-.err-line{
-  font-family:var(--mono);font-size:9px;
-  color:var(--alert);margin-top:4px;
-  display:none;letter-spacing:.3px;
-}
-.err-line.on{display:block;}
-
-/* ╔══════════════════════════════════════╗
-   ║  HOURS — VISUAL BLOCKS               ║
-   ╚══════════════════════════════════════╝ */
-.hours-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-
-.h-block{
-  background:var(--deep);
-  border:1px solid var(--rim2);
-  border-radius:var(--r);
-  padding:13px 10px 10px;
-  position:relative;overflow:hidden;
-  transition:border-color .2s,box-shadow .2s;
-}
-.h-block::before{
-  content:'';
-  position:absolute;top:0;left:0;right:0;height:2px;
-  opacity:0;transition:opacity .25s;
-}
-.h-block.hmr-b::before{background:var(--sky);}
-.h-block.bkd-b::before{background:var(--alert);}
-.h-block.hmr-b:focus-within{border-color:var(--sky);box-shadow:0 0 16px var(--sky-g);}
-.h-block.bkd-b:focus-within{border-color:var(--alert);box-shadow:0 0 16px var(--alert-g);}
-.h-block:focus-within::before{opacity:1;}
-
-.h-lbl{
-  font-family:var(--mono);font-size:8px;
-  letter-spacing:1.5px;text-transform:uppercase;
-  margin-bottom:7px;
-  display:flex;align-items:center;gap:4px;
-}
-.hmr-b .h-lbl{color:var(--sky);}
-.bkd-b .h-lbl{color:var(--alert);}
-.h-dot{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor;}
-
-.h-num{
-  width:100%;background:transparent;
-  border:none;outline:none;
-  font-family:var(--cond);font-size:38px;font-weight:900;
-  text-align:center;padding:2px 0;color:var(--txt);
-  letter-spacing:1px;
-}
-.h-num::placeholder{color:var(--txt4);font-weight:400;font-size:28px;letter-spacing:0;}
-.h-unit{
-  font-family:var(--mono);font-size:8px;
-  color:var(--txt3);text-align:center;
-  letter-spacing:1.5px;text-transform:uppercase;
-}
-
-/* HMR stat bar */
-.stat-row{
-  margin-top:12px;
-  background:var(--deep);border:1px solid var(--rim);
-  border-radius:var(--r);padding:9px 14px;
+/* HMR CALC PANEL */
+.hmr-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);overflow:hidden;margin-top:12px;}
+.hmr-ptitle{
+  padding:8px 14px;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;
   display:flex;align-items:center;justify-content:space-between;
 }
-.stat-lbl{font-family:var(--mono);font-size:8.5px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;}
-.stat-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--txt);}
-.stat-val.ok  {color:var(--go);}
-.stat-val.warn{color:var(--warn);}
-.stat-val.bad {color:var(--alert);}
-
-/* Segment bar */
-.seg{display:flex;height:4px;border-radius:2px;overflow:hidden;gap:1px;margin-top:6px;}
-.sg-hmr {background:var(--sky);transition:flex .35s;}
-.sg-bkd {background:var(--alert);transition:flex .35s;}
-.sg-empty{background:var(--rim2);flex:1;}
-
-/* ╔══════════════════════════════════════╗
-   ║  BREAKDOWN REASON                    ║
-   ╚══════════════════════════════════════╝ */
-.locked-msg{
-  background:var(--deep);border:1px dashed var(--rim2);
-  border-radius:var(--r);padding:14px;text-align:center;
-  font-family:var(--mono);font-size:9px;color:var(--txt4);letter-spacing:.5px;
+.hmr-calc-row{
+  display:grid;grid-template-columns:1fr 24px 1fr 24px 1fr;
+  align-items:center;padding:12px 10px;gap:4px;
 }
-.reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.r-btn{
-  background:var(--deep);border:1px solid var(--rim2);
-  border-radius:var(--r);padding:11px 12px;
-  display:flex;align-items:center;gap:8px;
-  cursor:pointer;transition:all .15s;
-  font-family:var(--sans);font-size:13px;color:var(--txt2);text-align:left;
-}
-.r-btn:hover{background:var(--base);border-color:var(--rim3);}
-.r-btn.on{border-color:var(--alert);background:var(--alert-s);color:var(--txt);}
-.r-btn input{display:none;}
-.r-circle{
-  width:11px;height:11px;min-width:11px;
-  border:1.5px solid var(--txt3);border-radius:50%;
-  transition:all .15s;
-}
-.r-btn.on .r-circle{border-color:var(--alert);background:var(--alert);box-shadow:0 0 8px var(--alert);}
+.hmr-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad);padding:10px 8px;text-align:center;}
+.hmr-box-lbl{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.hmr-box-val{font-size:22px;font-weight:800;letter-spacing:1px;}
+.hv-prev{color:var(--txt2);}
+.hv-today{color:var(--blue);}
+.hv-run{color:var(--green);}
+.hv-empty{color:var(--txt4);}
+.hmr-op{font-family:var(--mono);font-size:16px;color:var(--txt3);text-align:center;font-weight:600;}
+.hmr-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--border);}
+.hmr-metric{padding:10px 8px;text-align:center;border-right:1px solid var(--border);}
+.hmr-metric:last-child{border-right:none;}
+.hm-lbl{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.hm-val{font-size:18px;font-weight:700;}
+.hm-unit{font-family:var(--mono);font-size:8px;color:var(--txt3);letter-spacing:1px;}
+.hm-run{color:var(--green);}.hm-idle{color:var(--blue);}.hm-brkd{color:var(--red);}
+.util-bar{border-top:1px solid var(--border);padding:10px 14px;}
+.util-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;margin-bottom:6px;}
+.util-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.util-fill{height:100%;border-radius:3px;width:0;transition:width .5s ease,background .3s;}
 
-/* ╔══════════════════════════════════════╗
-   ║  SUFFIX INPUTS (Fuel)                ║
-   ╚══════════════════════════════════════╝ */
+/* HOUR BLOCKS */
+.h-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.h-block{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--rad);padding:13px 10px 10px;
+  position:relative;overflow:hidden;transition:border-color .2s,box-shadow .2s;
+}
+.h-block::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .25s;}
+.hb-hmr::before{background:var(--blue);}
+.hb-brkd::before{background:var(--red);}
+.h-block.hb-hmr:focus-within{border-color:var(--blue);box-shadow:0 0 14px rgba(59,130,246,.15);}
+.h-block.hb-brkd:focus-within{border-color:var(--red);box-shadow:0 0 14px rgba(239,68,68,.15);}
+.h-block:focus-within::before{opacity:1;}
+.h-lbl{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:4px;}
+.hb-hmr .h-lbl{color:var(--blue);}.hb-brkd .h-lbl{color:var(--red);}
+.h-dot{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor;}
+.h-input{
+  width:100%;background:transparent;border:none;outline:none;
+  font-size:36px;font-weight:800;text-align:center;padding:2px 0;color:var(--txt);letter-spacing:.5px;
+}
+.h-input::placeholder{color:var(--txt4);font-weight:400;font-size:26px;}
+.h-unit{font-family:var(--mono);font-size:8px;color:var(--txt3);text-align:center;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
 .suf-wrap{position:relative;}
-.suf-tag{
-  position:absolute;right:14px;top:50%;transform:translateY(-50%);
-  font-family:var(--mono);font-size:9px;color:var(--txt3);
-  letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;
-}
+.suf-tag{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;pointer-events:none;}
 .suf-wrap .fi{padding-right:58px;}
 
-/* ╔══════════════════════════════════════╗
-   ║  SUBMIT                              ║
-   ╚══════════════════════════════════════╝ */
-.submit-wrap{margin:14px 14px 0;animation:riseUp .5s .3s ease both;}
+/* REASON */
+.reason-locked{background:var(--bg2);border:1px dashed var(--border2);border-radius:var(--rad);padding:14px;text-align:center;font-family:var(--mono);font-size:9px;color:var(--txt4);letter-spacing:.5px;}
+.reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.r-btn{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rad);
+  padding:11px 12px;display:flex;align-items:center;gap:8px;
+  cursor:pointer;transition:all .15s;font-size:13px;color:var(--txt2);text-align:left;
+}
+.r-btn:hover{background:var(--bg3);border-color:var(--border);}
+.r-btn.on{border-color:var(--red);background:rgba(239,68,68,.08);color:var(--txt);}
+.r-btn input[type=radio]{display:none;}
+.r-dot{width:11px;height:11px;min-width:11px;border:1.5px solid var(--txt3);border-radius:50%;transition:all .15s;}
+.r-btn.on .r-dot{border-color:var(--red);background:var(--red);box-shadow:0 0 8px var(--red);}
 
-.sub-btn{
+/* SUBMIT */
+.submit-wrap{margin:14px 14px 0;animation:slideUp .4s .25s ease both;}
+.submit-btn{
   width:100%;
-  background:linear-gradient(135deg,var(--lt) 0%,#ff3d55 50%,var(--lt2) 100%);
+  background:linear-gradient(135deg,var(--lt-red),#ff3050,var(--lt-dark));
   background-size:200% 100%;
-  border:none;border-radius:var(--r);
-  padding:18px;
-  font-family:var(--cond);font-size:18px;font-weight:800;
-  letter-spacing:4px;text-transform:uppercase;
-  color:#fff;cursor:pointer;
-  position:relative;overflow:hidden;
-  transition:background-position .4s,transform .1s;
-  box-shadow:0 8px 30px rgba(232,0,29,.3);
+  border:none;border-radius:var(--rad);padding:17px;
+  font-size:15px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  color:#fff;cursor:pointer;position:relative;overflow:hidden;
+  transition:background-position .4s,transform .1s,opacity .2s;
+  box-shadow:0 8px 24px rgba(232,0,29,.3);
 }
-.sub-btn:hover{background-position:100% 0;}
-.sub-btn:active{transform:scale(.99);}
-.sub-btn::before{
-  content:'';
-  position:absolute;top:0;left:-100%;width:60%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
-  transition:left .6s;
-}
-.sub-btn:hover::before{left:150%;}
-.sub-btn::after{
-  content:'';
-  position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,transparent 100%);
-}
-
-.sub-meta{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  margin-top:8px;
-  font-family:var(--mono);font-size:8.5px;color:var(--txt4);letter-spacing:.5px;
-}
+.submit-btn:hover{background-position:100% 0;}
+.submit-btn:active{transform:scale(.99);}
+.submit-btn.edit-btn{background:linear-gradient(135deg,#b45309,var(--amber),#92400e);box-shadow:0 8px 24px rgba(245,158,11,.25);}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.submit-meta{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;font-family:var(--mono);font-size:8.5px;color:var(--txt4);letter-spacing:.5px;}
 .sm-dot{width:2px;height:2px;border-radius:50%;background:var(--txt4);}
 
-/* ╔══════════════════════════════════════╗
-   ║  SUCCESS SCREEN                      ║
-   ╚══════════════════════════════════════╝ */
-#successScreen{
-  display:none;position:fixed;inset:0;
-  background:var(--void);z-index:999;
-  flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:40px;
-}
+/* SUCCESS */
+#successScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:999;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;}
 #successScreen.show{display:flex;}
+.succ-ring{width:88px;height:88px;border-radius:50%;background:rgba(34,197,94,.08);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 0 50px rgba(34,197,94,.2);animation:pop .5s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.succ-ring svg{width:38px;height:38px;}
+.succ-title{font-size:28px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:8px;}
+.succ-asset{font-family:var(--mono);font-size:12px;color:var(--blue);letter-spacing:.5px;margin-bottom:6px;}
+.succ-summary{font-family:var(--mono);font-size:10px;color:var(--txt3);letter-spacing:.5px;line-height:2;margin-bottom:12px;}
+.succ-ts{font-family:var(--mono);font-size:9px;color:var(--txt4);background:var(--bg2);border:1px solid var(--border);border-radius:var(--rad);padding:7px 14px;display:inline-block;margin-bottom:28px;letter-spacing:.3px;}
+.succ-again{background:transparent;border:1px solid var(--border2);border-radius:var(--rad);padding:12px 24px;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);cursor:pointer;transition:all .2s;}
+.succ-again:hover{border-color:var(--blue);color:var(--blue);}
 
-.succ-ring{
-  width:96px;height:96px;
-  border-radius:50%;
-  background:var(--go-s);
-  border:2px solid var(--go);
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:26px;
-  box-shadow:0 0 60px var(--go-g);
-  animation:popScale .6s cubic-bezier(.175,.885,.32,1.275) both;
-}
-@keyframes popScale{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
-.succ-ring svg{width:42px;height:42px;}
+/* LOADING */
+#loadingOverlay{display:none;position:fixed;inset:0;background:rgba(15,17,23,.8);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+#loadingOverlay.show{display:flex;}
+.spin{width:34px;height:34px;border:3px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-family:var(--mono);font-size:11px;color:var(--txt2);letter-spacing:.5px;}
 
-.succ-h{
-  font-family:var(--cond);font-size:34px;font-weight:900;
-  letter-spacing:4px;text-transform:uppercase;
-  color:var(--go);margin-bottom:6px;
-  text-shadow:0 0 30px var(--go-g);
-}
-.succ-asset{
-  font-family:var(--mono);font-size:13px;color:var(--sky);
-  letter-spacing:.5px;margin-bottom:6px;
-}
-.succ-details{
-  font-family:var(--mono);font-size:10px;color:var(--txt3);
-  letter-spacing:.5px;line-height:2;margin-bottom:10px;
-}
-.succ-ts{
-  font-family:var(--mono);font-size:9px;color:var(--txt4);
-  background:var(--base);border:1px solid var(--rim);
-  border-radius:var(--r);padding:7px 14px;
-  display:inline-block;margin-bottom:28px;letter-spacing:.3px;
-}
-.succ-again{
-  background:transparent;border:1px solid var(--rim2);
-  border-radius:var(--r);padding:12px 26px;
-  font-family:var(--cond);font-size:14px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;
-  color:var(--txt2);cursor:pointer;transition:all .2s;
-}
-.succ-again:hover{border-color:var(--sky);color:var(--sky);}
-
-/* ── Responsive ── */
-@media(max-width:380px){
-  .hours-row{gap:7px;}
-  .h-num{font-size:30px;}
-  .lt-name-stack{display:none;}
+@media(max-width:360px){
+  .h-row{gap:7px;}.h-input{font-size:28px;}
   .reason-grid{grid-template-columns:1fr;}
-  .project-banner-right{display:none;}
-  .header-row2{padding:7px 14px;}
+  .hmr-calc-row{grid-template-columns:1fr 16px 1fr 16px 1fr;}
 }
-
-/* Edit mode banner */
-.edit-banner{display:none;margin:10px 14px 0;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--r);padding:10px 14px;align-items:center;gap:10px;}
-.edit-title{font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--warn);}
-.edit-sub{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.3px;margin-top:2px;}
-.status-tag.edit{background:var(--warn-s);border-color:rgba(245,158,11,.25);color:var(--warn);}
 </style>
 </head>
 <body>
-<div class="top-accent"></div>
 
-<!-- ══════ SUCCESS ══════ -->
+<!-- LOADING -->
+<div id="loadingOverlay"><div class="spin"></div><div class="loading-txt" id="loadingTxt">Checking entry status...</div></div>
+
+<!-- SUCCESS -->
 <div id="successScreen">
   <div class="succ-ring">
-    <svg viewBox="0 0 42 42" fill="none" stroke="var(--go)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="6 21 17 32 36 10"/>
+    <svg viewBox="0 0 38 38" fill="none" stroke="var(--green)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 19 15 28 32 10"/>
     </svg>
   </div>
-  <div class="succ-h" id="succTitle">Submitted</div>
-  <div class="succ-asset" id="sAsset">—</div>
-  <div class="succ-details" id="sDetails">—</div>
-  <div class="succ-ts" id="sTs">—</div>
+  <div class="succ-title" id="sTitle">Submitted</div>
+  <div class="succ-asset" id="sAsset"></div>
+  <div class="succ-summary" id="sSummary"></div>
+  <div class="succ-ts" id="sTs"></div>
   <button class="succ-again" onclick="resetForm()">Submit Next Report</button>
 </div>
 
-<div class="page" id="mainForm">
+<div class="page">
 
-<!-- ════════ HEADER ════════ -->
-<header class="header">
-  <div class="header-row1">
-    <!-- L&T Logo -->
-    <a class="lt-logo" href="#">
-      <div class="lt-emblem"><span class="lt-letters">L&T</span></div>
-      <div class="lt-name-stack">
-        <span class="lt-name">Larsen &amp; Toubro</span>
-        <span class="lt-sub"> HCI IC</span>
-      </div>
-    </a>
-    <div class="v-sep"></div>
-    <!-- Project name -->
-    <div class="project-title">
-      <div class="project-main">Asset<span> Monitoring</span></div>
-      <div class="project-sub">Daily Monitoring System</div>
+<!-- TOPBAR -->
+<header class="topbar">
+  <a class="lt-logo" href="#">
+    <div class="lt-badge">L&T</div>
+    <div class="lt-text">
+      <div class="lt-company">Larsen &amp; Toubro</div>
+      <div class="lt-project">HCI IC · ECC Division</div>
     </div>
-    <!-- Right -->
-    <div class="header-right">
-      <div class="live-pill"><div class="live-dot"></div>LIVE</div>
-      <div class="hdr-clock" id="hClock">--:--:--</div>
-      <div class="hdr-date"  id="hDate">--</div>
-    </div>
-  </div>
-  <!-- Project banner row -->
-  <div class="header-row2">
-    <span class="project-banner-txt">MAHSR C3 — SECTION 1 &nbsp;·&nbsp; P&amp;M</span>
-    <div class="project-banner-right">
-      <span id="sessionId">SESSION —</span>
-      <div class="banner-sep"></div>
-      <span>DAILY ASSET MONITORING</span>
-    </div>
+  </a>
+  <div class="topbar-right">
+    <div class="live-row"><div class="live-dot"></div><span class="live-label">LIVE</span></div>
+    <div class="clock-val" id="hClock">--:--:--</div>
+    <div class="clock-date" id="hDate">--</div>
   </div>
 </header>
 
-<!-- ════════ ASSET HERO ════════ -->
+<!-- PROJECT BANNER -->
+<div class="proj-banner">
+  <div class="pb-left">MAHSR C3 — Section 1 · P&amp;M</div>
+  <div class="pb-right" id="sessionId">SESSION —</div>
+</div>
+
+<!-- EDIT ALERT -->
+<div class="edit-alert" id="editAlert">
+  <div class="ea-icon">✏️</div>
+  <div>
+    <div class="ea-title">Edit Mode — Entry Exists Today</div>
+    <div class="ea-desc">Existing data loaded. Update fields and click "Update Entry".</div>
+  </div>
+</div>
+
+<!-- ASSET HERO -->
 <div class="asset-hero">
-  <!-- QR indicator -->
-  <div class="qr-indicator">
-    <div class="qr-grid-icon">
-      <div class="qr-cell on"></div><div class="qr-cell off"></div><div class="qr-cell on"></div>
-      <div class="qr-cell off"></div><div class="qr-cell on"></div><div class="qr-cell off"></div>
-      <div class="qr-cell on"></div><div class="qr-cell off"></div><div class="qr-cell on"></div>
+  <div class="qr-pill">
+    <div class="qr-icon">
+      <span class="qr-on"></span><span class="qr-off"></span><span class="qr-on"></span>
+      <span class="qr-off"></span><span class="qr-on"></span><span class="qr-off"></span>
+      <span class="qr-on"></span><span class="qr-off"></span><span class="qr-on"></span>
     </div>
-    <span class="qr-indicator-txt" id="qrHeroTxt">Scan machine QR code to load asset</span>
+    <span class="qr-txt" id="qrTxt">Scan machine QR code</span>
   </div>
-
-  <!-- Asset code + status -->
-  <div class="asset-display">
-    <div class="asset-left">
-      <span class="asset-code-label">Asset Code</span>
-      <div class="asset-code-big empty" id="aCodeBig">NOT LOADED</div>
-      <div class="asset-desc-line" id="aDescLine"></div>
+  <div class="asset-main">
+    <div>
+      <span class="a-label">Asset Code</span>
+      <div class="a-code empty" id="aCode">NOT LOADED</div>
+      <div class="a-desc" id="aDesc"></div>
     </div>
-    <div class="asset-right">
-      <div class="status-tag idle" id="statusTag"><div class="stag-dot"></div>STANDBY</div>
-      <div class="std-tag" id="stdTag">Std: — hrs/day</div>
+    <div class="a-right">
+      <div class="status-pill sp-standby" id="statusPill"><div class="sp-dot"></div>STANDBY</div>
+      <div class="std-label" id="stdLabel">Std: — hrs/day</div>
     </div>
   </div>
-
-  <!-- Chips -->
   <div class="asset-chips" id="aChips">
     <div class="chip"><div class="chip-dot" style="background:var(--txt4)"></div>Awaiting QR scan</div>
   </div>
 </div>
 
-<!-- ════════ PROGRESS ════════ -->
-<div class="prog-strip">
-  <div class="prog-bars">
-    <div class="pb active" id="pb1"></div>
-    <div class="pb" id="pb2"></div>
-    <div class="pb" id="pb3"></div>
-    <div class="pb" id="pb4"></div>
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog-steps">
+    <div class="p-step active" id="ps1"></div>
+    <div class="p-step" id="ps2"></div>
+    <div class="p-step" id="ps3"></div>
+    <div class="p-step" id="ps4"></div>
   </div>
-  <div class="prog-txt" id="progTxt">1 / 4 — Load Asset</div>
-
-<!-- EDIT MODE BANNER -->
-<div class="edit-banner" id="editBanner">
-  <div style="flex:1">
-    <div class="edit-title">⚠ Edit Mode — Entry Already Exists Today</div>
-    <div class="edit-sub">Existing data loaded. Update fields and click Update Entry to save changes.</div>
-  </div>
-</div>
+  <div class="p-label" id="pLabel">Step 1 / 4 — Load Asset</div>
 </div>
 
-<!-- ════════ CARD 01: ASSET INFO ════════ -->
-<div class="card">
-  <div class="card-head">
-    <div class="card-num">01</div>
-    <div class="card-title">Asset Information</div>
-    <div class="card-badge go">QR AUTO-FILL</div>
+<!-- SECTION 01 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num">01</div>
+    <div class="sec-title">Asset Information</div>
+    <div class="sec-badge green">QR AUTO-FILL</div>
   </div>
-  <div class="card-body">
-
+  <div class="sec-body">
     <div class="field">
-      <div class="fl">
-        <span class="req">*</span>Asset Code
-        <span class="fhint">Read-only · Set by QR scan</span>
-      </div>
-      <input type="text" class="fi ro" id="fCode"
-        placeholder="Scan QR code on machine..." readonly>
+      <div class="f-label"><span class="f-req">*</span>Asset Code <span class="f-hint">Read-only · set by QR</span></div>
+      <input type="text" class="fi ro" id="fCode" placeholder="Scan QR on machine..." readonly>
     </div>
-
     <div class="field">
-      <div class="fl">
-        <span class="req">*</span>Asset Description
-        <span class="fhint">Auto-filled from database</span>
-      </div>
-      <input type="text" class="fi autofill" id="fDesc"
-        placeholder="Auto-populated after QR scan..." readonly>
+      <div class="f-label"><span class="f-req">*</span>Asset Description <span class="f-hint">Auto-filled</span></div>
+      <input type="text" class="fi autofill" id="fDesc" placeholder="Auto-populates after scan..." readonly>
     </div>
-
     <div class="field">
-      <div class="fl"><span class="req">*</span>Report Date</div>
+      <div class="f-label"><span class="f-req">*</span>Report Date</div>
       <input type="date" class="fi" id="fDate" onchange="onDateChange()">
     </div>
-
   </div>
 </div>
 
-<!-- ════════ CARD 02: HOURS ════════ -->
-<div class="card">
-  <div class="card-head">
-    <div class="card-num">02</div>
-    <div class="card-title">Hour Meter Reading</div>
+<!-- SECTION 02 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num">02</div>
+    <div class="sec-title">Hour Meter Reading</div>
   </div>
-  <div class="card-body">
+  <div class="sec-body">
 
+    <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:var(--rad);padding:9px 13px;margin-bottom:14px;">
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--blue);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px;">ℹ HMR = Cumulative meter reading (like odometer)</div>
+      <div style="font-family:var(--mono);font-size:8.5px;color:var(--txt3);line-height:1.6;">Running Hours = Today HMR − Previous HMR. Enter breakdown hours manually below.</div>
+    </div>
 
     <div class="field">
-      <div class="fl">Previous HMR <span class="fhint">Auto-fetched from last entry</span></div>
-      <input type="number" class="fi ro" id="fPrevHmr" placeholder="Loading from sheet..." readonly>
+      <div class="f-label">Previous HMR <span class="f-hint">Auto-fetched from last entry</span></div>
+      <input type="text" class="fi prevhmr" id="fPrevHmr" placeholder="Fetching from sheet..." readonly>
     </div>
 
-    <div class="hours-row">
-      <!-- HMR -->
-      <div class="h-block hmr-b">
-        <div class="h-lbl"><div class="h-dot"></div>HMR</div>
-        <input class="h-num" type="number" id="fHmr"
-          min="0" step="0.1" placeholder="0"
-          inputmode="decimal" oninput="onHours()">
-        <div class="h-unit">hours</div>
+    <div class="h-row">
+      <div class="h-block hb-hmr">
+        <div class="h-lbl"><div class="h-dot"></div>Today's HMR</div>
+        <input class="h-input" type="number" id="fHmr" min="0" step="1" placeholder="—" inputmode="decimal" oninput="recalcHours()">
+        <div class="h-unit">meter reading</div>
       </div>
-      <!-- Breakdown -->
-      <div class="h-block bkd-b">
-        <div class="h-lbl"><div class="h-dot"></div>Breakdown</div>
-        <input class="h-num" type="number" id="fBrkd"
-          min="0" max="24" step="0.5" placeholder="0"
-          inputmode="decimal" oninput="onHours(); onBreakdown()">
+      <div class="h-block hb-brkd">
+        <div class="h-lbl"><div class="h-dot"></div>Breakdown Hrs</div>
+        <input class="h-input" type="number" id="fBrkd" min="0" max="24" step="0.5" placeholder="0" inputmode="decimal" oninput="recalcHours();onBreakdown()">
         <div class="h-unit">hours</div>
       </div>
     </div>
 
-    <!-- Stat row -->
-    <div class="stat-row">
-      <span class="stat-lbl">Brkd / HMR Ratio</span>
-      <span class="stat-val" id="statVal">— / —</span>
+    <!-- HMR CALCULATION PANEL -->
+    <div class="hmr-panel">
+      <div class="hmr-ptitle">
+        <span>Live Calculation</span>
+        <span id="calcStatus" style="color:var(--txt4)">—</span>
+      </div>
+      <div class="hmr-calc-row">
+        <div class="hmr-box">
+          <div class="hmr-box-lbl">Prev HMR</div>
+          <div class="hmr-box-val hv-empty" id="calcPrev">—</div>
+        </div>
+        <div class="hmr-op">→</div>
+        <div class="hmr-box">
+          <div class="hmr-box-lbl">Today HMR</div>
+          <div class="hmr-box-val hv-empty" id="calcToday">—</div>
+        </div>
+        <div class="hmr-op">=</div>
+        <div class="hmr-box">
+          <div class="hmr-box-lbl">Running</div>
+          <div class="hmr-box-val hv-empty" id="calcRun">—</div>
+        </div>
+      </div>
+      <div class="hmr-metrics">
+        <div class="hmr-metric">
+          <div class="hm-lbl">Running</div>
+          <div class="hm-val hm-run" id="mRun">—</div>
+          <div class="hm-unit">hrs</div>
+        </div>
+        <div class="hmr-metric">
+          <div class="hm-lbl">Idle</div>
+          <div class="hm-val hm-idle" id="mIdle">—</div>
+          <div class="hm-unit">hrs</div>
+        </div>
+        <div class="hmr-metric">
+          <div class="hm-lbl">Breakdown</div>
+          <div class="hm-val hm-brkd" id="mBrkd">0</div>
+          <div class="hm-unit">hrs</div>
+        </div>
+      </div>
+      <div class="util-bar">
+        <div class="util-row">
+          <span>Utilization %</span>
+          <span id="mUtil" style="font-weight:700">—</span>
+        </div>
+        <div class="util-track"><div class="util-fill" id="utilFill"></div></div>
+      </div>
     </div>
-    <div class="seg" id="segBar"><div class="sg-empty"></div></div>
 
-    <!-- Fuel -->
-    <div class="field" style="margin-top:14px">
-      <div class="fl"><span class="req">*</span>Fuel Refilled</div>
+    <div class="field" style="margin-top:14px;">
+      <div class="f-label"><span class="f-req">*</span>Fuel Refilled <span class="f-hint">Enter 0 if none</span></div>
       <div class="suf-wrap">
-        <input type="number" class="fi" id="fFuel"
-          min="0" placeholder="0" inputmode="decimal">
+        <input type="number" class="fi" id="fFuel" min="0" placeholder="0" inputmode="decimal">
         <span class="suf-tag">LITRES</span>
       </div>
-      <div class="err-line" id="eFuel">Please enter fuel value (0 if none)</div>
+      <div class="err-msg" id="eFuel">Please enter fuel value (0 if none)</div>
     </div>
 
   </div>
 </div>
 
-<!-- ════════ CARD 03: BREAKDOWN REASON ════════ -->
-<div class="card" id="cardBrkd">
-  <div class="card-head">
-    <div class="card-num red">03</div>
-    <div class="card-title red">Breakdown Reason</div>
-    <div class="card-badge red">CONDITIONAL</div>
+<!-- SECTION 03 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num red">03</div>
+    <div class="sec-title red">Breakdown Reason</div>
+    <div class="sec-badge red">CONDITIONAL</div>
   </div>
-  <div class="card-body">
-    <div class="locked-msg" id="bLocked">
-      Enter breakdown hours &gt; 0 above to unlock this section
-    </div>
+  <div class="sec-body">
+    <div class="reason-locked" id="bLocked">Enter breakdown hours &gt; 0 to unlock this section</div>
     <div class="reason-grid" id="bGrid" style="display:none">
-      <label class="r-btn"><input type="radio" name="brs" value="Mechanical">    <div class="r-circle"></div>Mechanical</label>
-      <label class="r-btn"><input type="radio" name="brs" value="Electrical">    <div class="r-circle"></div>Electrical</label>
-      <label class="r-btn"><input type="radio" name="brs" value="Tyre / Track">  <div class="r-circle"></div>Tyre / Track</label>
-      <label class="r-btn"><input type="radio" name="brs" value="Fuel Issue">    <div class="r-circle"></div>Fuel Issue</label>
-      <label class="r-btn"><input type="radio" name="brs" value="Overheating">   <div class="r-circle"></div>Overheating</label>
-      <label class="r-btn"><input type="radio" name="brs" value="Operator Error"><div class="r-circle"></div>Operator Error</label>
-      <label class="r-btn"><input type="radio" name="brs" value="External Damage"><div class="r-circle"></div>External Damage</label>
-      <label class="r-btn"><input type="radio" name="brs" value="Scheduled Maintenance"><div class="r-circle"></div>Scheduled Maint.</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Mechanical">    <div class="r-dot"></div>Mechanical</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Electrical">    <div class="r-dot"></div>Electrical</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Tyre / Track">  <div class="r-dot"></div>Tyre / Track</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Fuel Issue">    <div class="r-dot"></div>Fuel Issue</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Overheating">   <div class="r-dot"></div>Overheating</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Operator Error"><div class="r-dot"></div>Operator Error</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Ext. Damage">   <div class="r-dot"></div>Ext. Damage</label>
+      <label class="r-btn"><input type="radio" name="brs" value="Sched. Maint."> <div class="r-dot"></div>Sched. Maint.</label>
     </div>
-    <div class="err-line" id="eBrkdR" style="margin-top:8px">Please select a breakdown reason</div>
+    <div class="err-msg" id="eBrkdR" style="margin-top:8px">Please select a breakdown reason</div>
   </div>
 </div>
 
-<!-- ════════ CARD 04: REMARKS ════════ -->
-<div class="card">
-  <div class="card-head">
-    <div class="card-num amber">04</div>
-    <div class="card-title">Remarks &amp; Observations</div>
-    <div class="card-badge dim">OPTIONAL</div>
+<!-- SECTION 04 -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-num amber">04</div>
+    <div class="sec-title">Remarks &amp; Notes</div>
+    <div class="sec-badge dim">OPTIONAL</div>
   </div>
-  <div class="card-body">
-    <div class="field">
-      <div class="fl">Notes, observations, pending maintenance</div>
-      <textarea class="fi" id="fRemarks"
-        placeholder="Any abnormal sounds, pending repairs, operator notes, consumable usage..."></textarea>
-    </div>
+  <div class="sec-body">
+    <textarea class="fi" id="fRemarks" placeholder="Pending repairs, abnormal sounds, oil level, maintenance notes..."></textarea>
   </div>
 </div>
 
-<!-- ════════ SUBMIT ════════ -->
+<!-- SUBMIT -->
 <div class="submit-wrap">
-  <button class="sub-btn" onclick="doSubmit()" id="submitBtn">Transmit Daily Report</button>
-  <div class="sub-meta">
-    <span>L&T · MAHSR C3 S-1 P&amp;M</span>
-    <div class="sm-dot"></div>
-    <span>Google Sheets Sync</span>
+  <button class="submit-btn" id="submitBtn" onclick="doSubmit()">Transmit Daily Report</button>
+  <div class="submit-meta">
+    <span>L&amp;T · MAHSR C3</span>
     <div class="sm-dot"></div>
     <span id="submitMode">NEW ENTRY</span>
     <div class="sm-dot"></div>
@@ -950,575 +589,362 @@ textarea.fi{resize:none;height:80px;line-height:1.65;font-size:13px;}
 
 <script>
 // ================================================================
-//  CONFIGURATION — Update these two values
+//  CONFIGURATION
 // ================================================================
-
-// Your Google Sheet ID (just the ID, not the full URL)
-var SHEET_ID  = '1iBjWkRJXZEAKicPv9ILlozlC96fBkA1a_HplF5zqqE0';
-
-// Paste your Apps Script Web App URL here after deploying
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyjg1YICD5k-lzUyaGf3SGP37R_150D2pc-G8jxY8qgT9XREA5h6Mp7-IZxJRCtUbfxxA/exec';
-
-var SHEET_TAB = 'ASSET_MASTER';
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwkIu5aO3mbiBVbmMExyGwFFzK76X8EHx0sOagDYQ4E8jOuE0Cdlyt4sTxnJ472Kt6PkA/exec';  // ← Paste your Web App /exec URL here
+var SHEET_ID   = '1iBjWkRJXZEAKicPv9ILlozlC96fBkA1a_HplF5zqqE0';
+var SHEET_TAB  = 'ASSET_MASTER';
 
 // ================================================================
-//  LOCAL ASSET DATABASE (instant fallback — no network needed)
+//  LOCAL ASSET DATABASE (instant fallback — no network required)
 // ================================================================
 var LOCAL_DB = {
-  '25237829':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '25237721':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '25237772':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '25233661':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '252A1846':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '252A1951':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '252A1978':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '252A1986':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '252A2150':   {d:'LIGHT MAST',       t:'Light Mast',    c:'Lighting',   s:12},
-  '1901045525': {d:'30 KVA DG SET',    t:'Generator 30K', c:'Power-DG',   s:24},
-  '1901045526': {d:'30 KVA DG SET',    t:'Generator 30K', c:'Power-DG',   s:24},
-  '1901046378': {d:'30 KVA DG SET',    t:'Generator 30K', c:'Power-DG',   s:24},
-  '1901046538': {d:'30 KVA DG SET',    t:'Generator 30K', c:'Power-DG',   s:24},
-  '2410595':    {d:'30 KVA DG SET',    t:'Generator 30K', c:'Power-DG',   s:24},
-  '1901048373': {d:'30 KVA DG SET',    t:'Generator 30K', c:'Power-DG',   s:24},
-  '25401971':   {d:'30 KVA DG SET',    t:'Generator 30K', c:'Power-DG',   s:24},
-  '1901043747': {d:'62.5 KVA DG SET',  t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '25503006':   {d:'62.5 KVA DG SET',  t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '25502964':   {d:'62.5 KVA DG SET',  t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '25504380':   {d:'62.5 KVA DG SET',  t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '25500RZH':   {d:'DG 62.5 KVA',      t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '25500SAH':   {d:'DG 62.5 KVA',      t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '25500SEH':   {d:'DG 62.5 KVA',      t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '25500SFH':   {d:'DG 62.5 KVA',      t:'Gen 62.5K',     c:'Power-DG',   s:24},
-  '68173':      {d:'125 KVA DG SET',   t:'Gen 125K',      c:'Power-DG',   s:24},
-  '25700812':   {d:'125 KVA DG SET',   t:'Gen 125K',      c:'Power-DG',   s:24},
-  '25701525':   {d:'125 KVA DG SET',   t:'Gen 125K',      c:'Power-DG',   s:24},
-  '2592677H':   {d:'250 KVA DG SET',   t:'Gen 250K',      c:'Power-Heavy',s:24},
-  '25961560':   {d:'500 KVA DG',       t:'Gen 500K',      c:'Power-Heavy',s:24},
-  '25980556':   {d:'750 KVA DG SET',   t:'Gen 750K',      c:'Power-Heavy',s:24}
+  '25237829':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '25237721':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '25237772':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '25233661':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1846':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1951':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1978':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A1986':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '252A2150':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
+  '1901045525':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901045526':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901046378':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901046538':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '2410595':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901048373':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '25401971':{d:'30 KVA DG SET',t:'Generator 30K',c:'Power-DG',s:24},
+  '1901043747':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25503006':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25502964':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25504380':{d:'62.5 KVA DG SET',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500RZH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500SAH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500SEH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '25500SFH':{d:'DG 62.5 KVA',t:'Gen 62.5K',c:'Power-DG',s:24},
+  '68173':{d:'125 KVA DG SET',t:'Gen 125K',c:'Power-DG',s:24},
+  '25700812':{d:'125 KVA DG SET',t:'Gen 125K',c:'Power-DG',s:24},
+  '25701525':{d:'125 KVA DG SET',t:'Gen 125K',c:'Power-DG',s:24},
+  '2592677H':{d:'250 KVA DG SET',t:'Gen 250K',c:'Power-Heavy',s:24},
+  '25961560':{d:'500 KVA DG',t:'Gen 500K',c:'Power-Heavy',s:24},
+  '25980556':{d:'750 KVA DG SET',t:'Gen 750K',c:'Power-Heavy',s:24}
 };
 
-// ================================================================
-//  RUNTIME STATE
-// ================================================================
-var LIVE_DB      = {};
-var sheetsLoaded = false;
-var prevHmr      = null;   // last HMR for this asset (fetched from sheet)
-var stdHours     = 24;     // standard hours for this asset
-var isEditMode   = false;  // true = today's entry already exists
-var editRowNum   = null;   // sheet row number of existing entry
+// ── Runtime state ──
+var LIVE_DB    = {};
+var prevHmr    = null;   // previous day HMR for this asset
+var stdHours   = 24;     // standard hours for this asset type
+var isEditMode = false;  // true when today's entry already exists
+var editRowNum = null;   // sheet row number of that entry
 
-// ================================================================
-//  HELPERS
-// ================================================================
-function G(id) { return document.getElementById(id); }
+function G(id){return document.getElementById(id);}
+var MO=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function pad2(n){return String(n).padStart(2,'0');}
+function todayISO(){return new Date().toISOString().slice(0,10);}
 
-var MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-function pad2(n) { return String(n).padStart(2,'0'); }
-
-function tick() {
-  try {
-    var n = new Date();
-    G('hClock').textContent = pad2(n.getHours())+':'+pad2(n.getMinutes())+':'+pad2(n.getSeconds());
-    G('hDate').textContent  = pad2(n.getDate())+' '+MONTHS[n.getMonth()]+' '+n.getFullYear();
-  } catch(e) {}
+function readQR(){
+  try{var p=new URLSearchParams(window.location.search);return(p.get('asset')||p.get('code')||p.get('a')||'').trim().toUpperCase();}
+  catch(e){return '';}
 }
 
-function readQR() {
-  try {
-    var p = new URLSearchParams(window.location.search);
-    return (p.get('asset')||p.get('code')||p.get('a')||'').trim().toUpperCase();
-  } catch(e) { return ''; }
+function tick(){
+  try{
+    var n=new Date();
+    G('hClock').textContent=pad2(n.getHours())+':'+pad2(n.getMinutes())+':'+pad2(n.getSeconds());
+    G('hDate').textContent=pad2(n.getDate())+' '+MO[n.getMonth()]+' '+n.getFullYear();
+  }catch(e){}
 }
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+function setProgress(s){
+  for(var i=1;i<=4;i++){var el=G('ps'+i);el.className='p-step'+(i<s?' done':i===s?' active':'');}
+  var lbl=['','1/4 — Load Asset','2/4 — Asset Ready','3/4 — HMR Entered','4/4 — Ready'];
+  G('pLabel').textContent=lbl[s]||lbl[1];
 }
 
-function setProgress(s) {
-  for (var i = 1; i <= 4; i++) {
-    var el = G('pb'+i);
-    if (i < s)       el.className = 'pb done';
-    else if (i === s) el.className = 'pb active';
-    else              el.className = 'pb';
-  }
-  var lbl = ['','1/4 — Load Asset','2/4 — Asset Ready','3/4 — HMR Entered','4/4 — Ready to Submit'];
-  G('progTxt').textContent = lbl[s] || lbl[1];
-}
+function showLoading(msg){G('loadingTxt').textContent=msg||'Loading...';G('loadingOverlay').classList.add('show');}
+function hideLoading(){G('loadingOverlay').classList.remove('show');}
 
-// ================================================================
-//  SHOW / HIDE EDIT MODE BANNER
-// ================================================================
-function setEditMode(isEdit, rowNum) {
-  isEditMode = isEdit;
-  editRowNum = rowNum || null;
-
-  var banner = G('editBanner');
-  var btn    = G('submitBtn');
-
-  if (isEdit) {
-    if (banner) banner.style.display = 'flex';
-    if (btn)    btn.textContent = 'Update Entry';
-    G('submitMode').textContent  = 'EDIT MODE — Updating row ' + rowNum;
-    G('statusTag').className     = 'status-tag edit';
-    G('statusTag').innerHTML     = '<div class="stag-dot"></div>EDIT MODE';
+function setEditMode(isEdit,rowNum){
+  isEditMode=isEdit;editRowNum=rowNum||null;
+  var btn=G('submitBtn');
+  if(isEdit){
+    G('editAlert').classList.add('show');
+    btn.textContent='Update Entry';btn.classList.add('edit-btn');
+    G('submitMode').textContent='EDIT · Row '+(rowNum||'?');
+    G('statusPill').className='status-pill sp-edit';
+    G('statusPill').innerHTML='<div class="sp-dot"></div>EDIT MODE';
   } else {
-    if (banner) banner.style.display = 'none';
-    if (btn)    btn.textContent = 'Transmit Daily Report';
-    G('submitMode').textContent  = 'NEW ENTRY';
+    G('editAlert').classList.remove('show');
+    btn.textContent='Transmit Daily Report';btn.classList.remove('edit-btn');
+    G('submitMode').textContent='NEW ENTRY';
   }
 }
 
-// ================================================================
-//  FETCH ASSET LIST FROM GOOGLE SHEETS (CSV — no API key needed)
-//  Sheet must be shared "Anyone with link → Viewer"
-// ================================================================
-function fetchAssetDB() {
-  if (!SHEET_ID || SHEET_ID === 'YOUR_SHEET_ID') return Promise.resolve();
-  var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
-            '/gviz/tq?tqx=out:csv&sheet=' + encodeURIComponent(SHEET_TAB) +
-            '&t=' + Date.now();
-  var ctrl  = new AbortController();
-  var timer = setTimeout(function() { ctrl.abort(); }, 8000);
-
-  return fetch(url, { cache: 'no-store', signal: ctrl.signal })
-    .then(function(r) {
-      clearTimeout(timer);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.text();
-    })
-    .then(function(csv) {
-      var db    = {};
-      var lines = csv.trim().split('\n');
-      for (var i = 1; i < lines.length; i++) {
-        var cols = splitCSV(lines[i]);
-        if (cols.length < 2) continue;
-        var code = cols[0].replace(/"/g,'').trim().toUpperCase();
-        if (!code) continue;
-        db[code] = {
-          d: cols[1].replace(/"/g,'').trim(),
-          t: (cols[2]||'Equipment').replace(/"/g,'').trim(),
-          c: (cols[3]||'General').replace(/"/g,'').trim(),
-          s: parseInt((cols[4]||'24').replace(/"/g,'').trim()) || 24
-        };
+// ── Fetch asset list from Google Sheets CSV ──
+function fetchAssetDB(){
+  if(!SHEET_ID)return Promise.resolve();
+  var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB)+'&t='+Date.now();
+  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},8000);
+  return fetch(url,{cache:'no-store',signal:ctrl.signal})
+    .then(function(r){clearTimeout(t);return r.text();})
+    .then(function(csv){
+      var db={},lines=csv.trim().split('\n');
+      for(var i=1;i<lines.length;i++){
+        var c=splitCSV(lines[i]);if(c.length<2)continue;
+        var code=c[0].replace(/"/g,'').trim().toUpperCase();if(!code)continue;
+        db[code]={d:c[1].replace(/"/g,'').trim(),t:(c[2]||'Equipment').replace(/"/g,'').trim(),c:(c[3]||'General').replace(/"/g,'').trim(),s:parseInt((c[4]||'24').replace(/"/g,'').trim())||24};
       }
-      LIVE_DB = db;
-      sheetsLoaded = true;
+      LIVE_DB=db;
     })
-    .catch(function() { clearTimeout(timer); sheetsLoaded = false; });
+    .catch(function(){clearTimeout(t);});
 }
 
-function splitCSV(line) {
-  var result = [], cur = '', inQ = false;
-  for (var i = 0; i < line.length; i++) {
-    var ch = line[i];
-    if (ch === '"') { inQ = !inQ; }
-    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += ch; }
+function splitCSV(l){
+  var r=[],cur='',q=false;
+  for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;}}
+  r.push(cur);return r;
+}
+
+// ── Fetch entry status from Web App ──
+// Returns: {prevHmr, prevDate, existing:{rowNumber,hmr,brkd,fuel,remarks,brkdReason}}
+function fetchEntryStatus(code,date){
+  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE')return Promise.resolve({prevHmr:null,existing:null});
+  var url=WEBAPP_URL+'?action=check&code='+encodeURIComponent(code)+'&date='+encodeURIComponent(date)+'&t='+Date.now();
+  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},10000);
+  return fetch(url,{signal:ctrl.signal})
+    .then(function(r){clearTimeout(t);return r.json();})
+    .catch(function(){clearTimeout(t);return {prevHmr:null,existing:null};});
+}
+
+// ── Apply prevHmr to UI ──
+function applyPrevHmr(val){
+  if(val!==null&&val!==undefined&&!isNaN(parseFloat(val))){
+    prevHmr=parseFloat(val);
+    G('fPrevHmr').value=prevHmr;
+    G('fPrevHmr').className='fi prevhmr';
+    G('calcPrev').textContent=prevHmr;
+    G('calcPrev').className='hmr-box-val hv-prev';
+  } else {
+    prevHmr=null;
+    G('fPrevHmr').value='';
+    G('fPrevHmr').placeholder='No previous entry (first scan)';
+    G('fPrevHmr').className='fi prevhmr';
+    G('calcPrev').textContent='—';
+    G('calcPrev').className='hmr-box-val hv-empty';
   }
-  result.push(cur);
-  return result;
 }
 
-// ================================================================
-//  FETCH ENTRY STATUS FROM WEB APP
-//  Returns:
-//    prevHmr  — last recorded HMR for this asset (auto-fills PrevHMR field)
-//    existing — today's entry data if already submitted (triggers edit mode)
-// ================================================================
-function fetchEntryStatus(code, date) {
-  if (!WEBAPP_URL || WEBAPP_URL === 'PASTE_WEBAPP_URL_HERE') {
-    return Promise.resolve({ prevHmr: null, existing: null });
-  }
-  var url = WEBAPP_URL + '?action=check&code=' + encodeURIComponent(code) +
-            '&date=' + encodeURIComponent(date) + '&t=' + Date.now();
-  var ctrl  = new AbortController();
-  var timer = setTimeout(function() { ctrl.abort(); }, 10000);
-
-  return fetch(url, { signal: ctrl.signal })
-    .then(function(r) { clearTimeout(timer); return r.json(); })
-    .catch(function()  { clearTimeout(timer); return { prevHmr: null, existing: null }; });
-}
-
-// ================================================================
-//  LOAD ASSET — called on page load after QR scan
-// ================================================================
-function loadAsset(code) {
-  if (!code) { renderAsset('', null); return; }
-
-  // Show loading state immediately
-  G('aCodeBig').className    = 'asset-code-big';
-  G('aCodeBig').textContent  = code;
-  G('aDescLine').textContent = 'Loading...';
-  G('fCode').value = code;
-  G('statusTag').className   = 'status-tag idle';
-  G('statusTag').innerHTML   = '<div class="stag-dot"></div>LOADING';
-
-  var date = G('fDate').value || todayISO();
-
-  // Show local data instantly if available
-  var localA = LOCAL_DB[code];
-  if (localA) renderAsset(code, localA);
-
-  // Fetch sheet data + entry status in parallel
-  Promise.all([fetchAssetDB(), fetchEntryStatus(code, date)])
-    .then(function(results) {
-      var entryStatus = results[1] || {};
-      var a = LIVE_DB[code] || LOCAL_DB[code] || null;
-      renderAsset(code, a);
-
-      if (a) {
-        stdHours = a.s || 24;
-
-        // ── FEATURE 2: Auto-fill Previous HMR ──
-        if (entryStatus.prevHmr !== null && entryStatus.prevHmr !== undefined) {
-          prevHmr = parseFloat(entryStatus.prevHmr);
-          G('fPrevHmr').value = prevHmr;
-          G('fPrevHmr').style.color = 'var(--go)';
-        } else {
-          prevHmr = null;
-          G('fPrevHmr').value = '';
-          G('fPrevHmr').placeholder = 'No previous entry';
-        }
-
-        // ── FEATURE 1: Detect duplicate — switch to Edit Mode ──
-        if (entryStatus.existing) {
-          var ex = entryStatus.existing;
-          setEditMode(true, ex.rowNumber);
-
-          // Pre-fill all fields with existing entry data
-          if (ex.hmr  !== undefined) G('fHmr').value   = ex.hmr;
-          if (ex.brkd !== undefined) G('fBrkd').value  = ex.brkd  || 0;
-          if (ex.fuel !== undefined) G('fFuel').value  = ex.fuel  || 0;
-          if (ex.remarks)            G('fRemarks').value = ex.remarks;
-
-          // Restore breakdown reason radio button
-          if (ex.brkdReason) {
-            var radios = document.querySelectorAll('input[name="brs"]');
-            for (var i = 0; i < radios.length; i++) {
-              if (radios[i].value === ex.brkdReason) {
-                radios[i].checked = true;
-                radios[i].closest('.r-btn').classList.add('on');
-              }
-            }
-          }
-
-          recalcHours();
-          onBreakdown();
-          setProgress(3);
-        } else {
-          setEditMode(false);
-          setProgress(2);
-        }
+// ── Prefill form with existing entry data ──
+function prefillExisting(ex){
+  setEditMode(true,ex.rowNumber);
+  if(ex.hmr!==undefined&&ex.hmr!=='')G('fHmr').value=ex.hmr;
+  if(ex.brkd!==undefined)G('fBrkd').value=ex.brkd||0;
+  if(ex.fuel!==undefined)G('fFuel').value=ex.fuel||0;
+  if(ex.remarks)G('fRemarks').value=ex.remarks;
+  // Restore radio selection
+  if(ex.brkdReason){
+    var radios=document.querySelectorAll('input[name="brs"]');
+    for(var i=0;i<radios.length;i++){
+      if(radios[i].value===ex.brkdReason){
+        radios[i].checked=true;
+        radios[i].closest('.r-btn').classList.add('on');
       }
+    }
+  }
+  recalcHours();
+  onBreakdown();
+  setProgress(3);
+}
+
+// ── Main loadAsset ──
+function loadAsset(code){
+  if(!code){renderAsset('',null);return;}
+  showLoading('Loading asset...');
+  G('aCode').textContent=code;G('fCode').value=code;
+  var date=G('fDate').value||todayISO();
+  var localA=LOCAL_DB[code];
+  if(localA){renderAsset(code,localA);stdHours=localA.s||24;}
+  Promise.all([fetchAssetDB(),fetchEntryStatus(code,date)])
+    .then(function(res){
+      hideLoading();
+      var es=res[1]||{};
+      var a=LIVE_DB[code]||LOCAL_DB[code]||null;
+      renderAsset(code,a);
+      if(a)stdHours=a.s||24;
+      applyPrevHmr(es.prevHmr);
+      if(es.existing){prefillExisting(es.existing);}
+      else{setEditMode(false);setProgress(2);}
     })
-    .catch(function() {
-      var a = LOCAL_DB[code] || null;
-      renderAsset(code, a);
+    .catch(function(){
+      hideLoading();
+      renderAsset(code,LOCAL_DB[code]||null);
     });
 }
 
-// ================================================================
-//  RENDER ASSET UI
-// ================================================================
-function renderAsset(code, a) {
-  G('fCode').value = code || '';
-  G('fDesc').value = a ? a.d : '';
-
-  if (!code) {
-    G('aCodeBig').className    = 'asset-code-big empty';
-    G('aCodeBig').textContent  = 'NOT LOADED';
-    G('aDescLine').textContent = '';
-    G('statusTag').className   = 'status-tag idle';
-    G('statusTag').innerHTML   = '<div class="stag-dot"></div>STANDBY';
-    G('stdTag').textContent    = 'Std: — hrs/day';
-    G('aChips').innerHTML      = '<div class="chip"><div class="chip-dot" style="background:var(--txt4)"></div>Awaiting QR scan</div>';
-    G('qrHeroTxt').textContent = 'Scan machine QR code to load asset';
-    setProgress(1);
-    return;
+// ── Render asset UI ──
+function renderAsset(code,a){
+  G('fCode').value=code||'';G('fDesc').value=a?a.d:'';
+  if(!code){
+    G('aCode').className='a-code empty';G('aCode').textContent='NOT LOADED';
+    G('aDesc').textContent='';
+    G('statusPill').className='status-pill sp-standby';G('statusPill').innerHTML='<div class="sp-dot"></div>STANDBY';
+    G('stdLabel').textContent='Std: — hrs/day';
+    G('aChips').innerHTML='<div class="chip"><div class="chip-dot" style="background:var(--txt4)"></div>Awaiting QR scan</div>';
+    G('qrTxt').textContent='Scan machine QR code';setProgress(1);return;
   }
-
-  if (a) {
-    G('aCodeBig').className    = 'asset-code-big';
-    G('aCodeBig').textContent  = code;
-    G('aDescLine').textContent = a.d;
-    G('statusTag').className   = 'status-tag ok';
-    G('statusTag').innerHTML   = '<div class="stag-dot"></div>LOADED';
-    G('stdTag').textContent    = 'Std: ' + a.s + ' hrs/day';
-
-    var cc = a.c === 'Lighting' ? 'var(--warn)' : 'var(--sky)';
-    G('aChips').innerHTML =
-      '<div class="chip"><div class="chip-dot" style="background:' + cc + '"></div>' + a.t + '</div>' +
-      '<div class="chip"><div class="chip-dot" style="background:var(--go)"></div>' + a.c + '</div>' +
-      '<div class="chip"><div class="chip-dot" style="background:var(--txt3)"></div>Std ' + a.s + 'h/day</div>';
-
-    G('qrHeroTxt').textContent = 'QR verified — ' + code + ' loaded';
-    G('qrHeroTxt').style.color = 'var(--go)';
-    var qb = document.querySelector('.qr-indicator');
-    if (qb) { qb.style.background = 'var(--go-s)'; qb.style.borderColor = 'rgba(16,185,129,.25)'; }
+  if(a){
+    G('aCode').className='a-code';G('aCode').textContent=code;
+    G('aDesc').textContent=a.d;
+    G('statusPill').className='status-pill sp-loaded';G('statusPill').innerHTML='<div class="sp-dot"></div>LOADED';
+    G('stdLabel').textContent='Std: '+a.s+' hrs/day';
+    var cc=a.c==='Lighting'?'#f59e0b':'#3b82f6';
+    G('aChips').innerHTML='<div class="chip"><div class="chip-dot" style="background:'+cc+'"></div>'+a.t+'</div><div class="chip"><div class="chip-dot" style="background:var(--green)"></div>'+a.c+'</div><div class="chip"><div class="chip-dot" style="background:var(--txt3)"></div>Std '+a.s+'h/day</div>';
+    G('qrTxt').textContent='QR verified — '+code;G('qrTxt').style.color='var(--green)';
+    var qp=document.querySelector('.qr-pill');
+    if(qp){qp.style.background='rgba(34,197,94,.1)';qp.style.borderColor='rgba(34,197,94,.25)';}
   } else {
-    G('aCodeBig').textContent  = code;
-    G('aDescLine').textContent = 'Not found — add to ASSET_MASTER sheet';
-    G('statusTag').className   = 'status-tag brkd';
-    G('statusTag').innerHTML   = '<div class="stag-dot"></div>NOT FOUND';
-    G('fDesc').removeAttribute('readonly');
-    G('fDesc').placeholder = 'Type description manually...';
-    G('fDesc').classList.remove('autofill');
+    G('aCode').textContent=code;
+    G('aDesc').textContent='Not found — add to ASSET_MASTER sheet';
+    G('statusPill').className='status-pill sp-unknown';G('statusPill').innerHTML='<div class="sp-dot"></div>NOT FOUND';
+    G('fDesc').removeAttribute('readonly');G('fDesc').placeholder='Type description manually...';G('fDesc').classList.remove('autofill');
   }
 }
 
-// ================================================================
-//  RECALCULATE HOURS
-//  Running  = TodayHMR - PrevHMR        (cumulative delta)
-//  Idle     = StdHours - Running - Brkd  (what's left)
-//  Util%    = Running / StdHours * 100
-// ================================================================
-function recalcHours() {
-  var todayHmrVal = parseFloat(G('fHmr').value)  || null;
-  var brkdVal     = parseFloat(G('fBrkd').value) || 0;
-
-  if (todayHmrVal === null) {
-    G('statVal').textContent = '— / —';
-    G('statVal').className   = 'stat-val';
-    G('segBar').innerHTML    = '<div class="sg-empty"></div>';
-    return;
-  }
-
-  // Calculate running hours
-  var runHrs;
-  if (prevHmr !== null) {
-    runHrs = Math.max(0, todayHmrVal - prevHmr);
+// ── Recalculate hours (runs on every keystroke) ──
+function recalcHours(){
+  var todayVal=parseFloat(G('fHmr').value);
+  var brkdVal=parseFloat(G('fBrkd').value)||0;
+  if(!isNaN(todayVal)){
+    G('calcToday').textContent=todayVal;G('calcToday').className='hmr-box-val hv-today';
   } else {
-    // No previous entry — first ever entry for this asset
-    // Running hours cannot be calculated, show warning
-    runHrs = 0;
+    G('calcToday').textContent='—';G('calcToday').className='hmr-box-val hv-empty';
   }
-
-  var idleHrs = Math.max(0, stdHours - runHrs - brkdVal);
-  var util    = stdHours > 0 ? Math.min(100, (runHrs / stdHours * 100)) : 0;
-
-  // Update stat display
-  var sv = G('statVal');
-  sv.textContent = 'Run: ' + runHrs.toFixed(1) + 'h  Idle: ' + idleHrs.toFixed(1) + 'h  Util: ' + util.toFixed(1) + '%';
-  sv.className   = 'stat-val ' + (util >= 75 ? 'ok' : util >= 40 ? 'warn' : 'bad');
-
-  // Segment bar
-  var max = Math.max(stdHours, runHrs + brkdVal);
-  G('segBar').innerHTML =
-    (runHrs  > 0 ? '<div class="sg-hmr"  style="flex:' + runHrs  + '"></div>' : '') +
-    (brkdVal > 0 ? '<div class="sg-bkd"  style="flex:' + brkdVal + '"></div>' : '') +
-    '<div class="sg-empty" style="flex:' + Math.max(0, stdHours - runHrs - brkdVal) + '"></div>';
-
-  if (todayHmrVal > 0) setProgress(3);
+  G('mBrkd').textContent=brkdVal>0?brkdVal.toFixed(1):'0';
+  if(isNaN(todayVal)){
+    G('calcRun').textContent='—';G('calcRun').className='hmr-box-val hv-empty';
+    G('mRun').textContent='—';G('mIdle').textContent='—';G('mUtil').textContent='—';
+    G('calcStatus').textContent='—';G('calcStatus').style.color='var(--txt4)';
+    G('utilFill').style.width='0';return;
+  }
+  var runHrs,hasCalc;
+  if(prevHmr!==null){runHrs=Math.max(0,todayVal-prevHmr);hasCalc=true;}
+  else{runHrs=0;hasCalc=false;}
+  var idleHrs=Math.max(0,stdHours-runHrs-brkdVal);
+  var util=stdHours>0?Math.min(100,(runHrs/stdHours*100)):0;
+  G('calcRun').textContent=hasCalc?runHrs.toFixed(1):'?';
+  G('calcRun').className='hmr-box-val '+(hasCalc?'hv-run':'hv-empty');
+  G('mRun').textContent=hasCalc?runHrs.toFixed(1):'—';
+  G('mIdle').textContent=hasCalc?idleHrs.toFixed(1):'—';
+  G('mUtil').textContent=hasCalc?util.toFixed(1)+'%':'—';
+  var fill=G('utilFill');
+  fill.style.width=(hasCalc?util:0)+'%';
+  fill.style.background=util>=75?'var(--green)':util>=40?'var(--amber)':'var(--red)';
+  if(!hasCalc){G('calcStatus').textContent='No prev entry';G('calcStatus').style.color='var(--amber)';}
+  else if(brkdVal>0){G('calcStatus').textContent='BREAKDOWN';G('calcStatus').style.color='var(--red)';}
+  else{G('calcStatus').textContent=util.toFixed(1)+'% util';G('calcStatus').style.color=util>=75?'var(--green)':'var(--amber)';}
+  if(!isNaN(todayVal)&&todayVal>0)setProgress(3);
 }
 
-// ================================================================
-//  BREAKDOWN CONDITIONAL SECTION
-// ================================================================
-function onBreakdown() {
-  var v = parseFloat(G('fBrkd').value) || 0;
-  G('bLocked').style.display = v > 0 ? 'none'  : 'block';
-  G('bGrid').style.display   = v > 0 ? 'grid'  : 'none';
-
-  var st = G('statusTag');
-  if (v > 0) {
-    st.className = 'status-tag brkd';
-    st.innerHTML = '<div class="stag-dot"></div>BREAKDOWN';
-  } else if (G('fCode').value) {
-    st.className = isEditMode ? 'status-tag edit' : 'status-tag ok';
-    st.innerHTML = '<div class="stag-dot"></div>' + (isEditMode ? 'EDIT MODE' : 'OPERATIONAL');
+// ── Breakdown section toggle ──
+function onBreakdown(){
+  var v=parseFloat(G('fBrkd').value)||0;
+  G('bLocked').style.display=v>0?'none':'block';
+  G('bGrid').style.display=v>0?'grid':'none';
+  if(v>0){G('statusPill').className='status-pill sp-brkd';G('statusPill').innerHTML='<div class="sp-dot"></div>BREAKDOWN';}
+  else if(G('fCode').value){
+    if(isEditMode){G('statusPill').className='status-pill sp-edit';G('statusPill').innerHTML='<div class="sp-dot"></div>EDIT MODE';}
+    else{G('statusPill').className='status-pill sp-loaded';G('statusPill').innerHTML='<div class="sp-dot"></div>OPERATIONAL';}
   }
   recalcHours();
 }
 
-// ================================================================
-//  DATE CHANGE — re-check entry status for new date
-// ================================================================
-function onDateChange() {
-  var code = G('fCode').value.trim();
-  if (!code) return;
-
-  G('fPrevHmr').value = 'Checking...';
-
-  fetchEntryStatus(code, G('fDate').value)
-    .then(function(es) {
-      es = es || {};
-
-      // Update prevHmr
-      if (es.prevHmr !== null && es.prevHmr !== undefined) {
-        prevHmr = parseFloat(es.prevHmr);
-        G('fPrevHmr').value = prevHmr;
-      } else {
-        prevHmr = null;
-        G('fPrevHmr').value = '';
-        G('fPrevHmr').placeholder = 'No previous entry';
-      }
-
-      // Update edit mode
-      if (es.existing) {
-        setEditMode(true, es.existing.rowNumber);
-      } else {
+// ── Date change: re-check entry status ──
+function onDateChange(){
+  var code=G('fCode').value.trim();if(!code)return;
+  G('fPrevHmr').value='Checking...';
+  fetchEntryStatus(code,G('fDate').value)
+    .then(function(es){
+      es=es||{};
+      applyPrevHmr(es.prevHmr);
+      if(es.existing){prefillExisting(es.existing);}
+      else{
         setEditMode(false);
-        // Clear hour fields when switching to a different day
-        G('fHmr').value  = '';
-        G('fBrkd').value = '';
-        G('fFuel').value = '';
-        recalcHours();
+        G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';
+        document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
+        document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
+        G('bLocked').style.display='block';G('bGrid').style.display='none';
+        recalcHours();setProgress(2);
       }
     });
 }
 
-// ================================================================
-//  SUBMIT FORM
-// ================================================================
-function doSubmit() {
-  var code    = G('fCode').value.trim();
-  var desc    = G('fDesc').value.trim();
-  var date    = G('fDate').value;
-  var todayHmrStr = G('fHmr').value;
-  var brkdStr     = G('fBrkd').value;
-  var fuelStr     = G('fFuel').value;
-  var remarks     = G('fRemarks').value;
-
-  // Validate
-  if (!code)        { alert('No asset loaded. Scan the QR code on the machine.'); return; }
-  if (!date)        { alert('Please select the report date.'); return; }
-  if (!todayHmrStr) { alert('Please enter today\'s HMR reading.'); return; }
-  if (fuelStr === '') { G('eFuel').classList.add('on'); return; }
-  G('eFuel').classList.remove('on');
-
-  var todayHmrNum = parseFloat(todayHmrStr);
-  var brkdNum     = parseFloat(brkdStr)  || 0;
-  var fuelNum     = parseFloat(fuelStr)  || 0;
-
-  // HMR must be greater than previous HMR
-  if (prevHmr !== null && todayHmrNum < prevHmr) {
-    alert('ERROR: Today\'s HMR (' + todayHmrNum + ') cannot be less than Previous HMR (' + prevHmr + ').\n\nHMR is cumulative — it always increases.');
-    return;
-  }
-  if (prevHmr !== null && todayHmrNum === prevHmr) {
-    if (!confirm('Today\'s HMR equals Previous HMR (' + prevHmr + '). This means 0 running hours. Continue?')) return;
-  }
-
-  // Breakdown reason required if breakdown > 0
-  var brsEl = document.querySelector('input[name="brs"]:checked');
-  if (brkdNum > 0 && !brsEl) { G('eBrkdR').classList.add('on'); return; }
-  G('eBrkdR').classList.remove('on');
-
-  // Calculate all values
-  var runHrs  = prevHmr !== null ? Math.max(0, todayHmrNum - prevHmr) : 0;
-  var idleHrs = Math.max(0, stdHours - runHrs - brkdNum);
-  var util    = stdHours > 0 ? (runHrs / stdHours * 100).toFixed(1) : '0';
-
-  // Build payload
-  var payload = {
-    isEdit:       isEditMode,
-    rowNumber:    editRowNum,
-    date:         date,
-    assetCode:    code,
-    description:  desc || code,
-    prevHmr:      prevHmr !== null ? prevHmr : '',
-    todayHmr:     todayHmrNum,
-    runningHrs:   runHrs.toFixed(2),
-    breakdownHrs: brkdNum,
-    idleHrs:      idleHrs.toFixed(2),
-    stdHours:     stdHours,
-    utilization:  util,
-    fuel:         fuelNum,
-    brkdReason:   brsEl ? brsEl.value : '',
-    status:       brkdNum > 0 ? 'BREAKDOWN' : 'OPERATIONAL',
-    remarks:      remarks,
-    timestamp:    new Date().toISOString()
+// ── Submit ──
+function doSubmit(){
+  var code=G('fCode').value.trim(),desc=G('fDesc').value.trim();
+  var date=G('fDate').value,hmrStr=G('fHmr').value;
+  var brkdStr=G('fBrkd').value,fuelStr=G('fFuel').value,remarks=G('fRemarks').value;
+  if(!code){alert('No asset loaded. Scan the QR code first.');return;}
+  if(!date){alert('Please select the report date.');return;}
+  if(!hmrStr){alert("Please enter today's HMR reading.");return;}
+  if(fuelStr===''){G('eFuel').classList.add('show');return;}
+  G('eFuel').classList.remove('show');
+  var hmrNum=parseFloat(hmrStr),brkdNum=parseFloat(brkdStr)||0,fuelNum=parseFloat(fuelStr)||0;
+  if(prevHmr!==null&&hmrNum<prevHmr){alert("ERROR: Today's HMR ("+hmrNum+") < Previous HMR ("+prevHmr+").\n\nHMR is cumulative and always increases.");return;}
+  var brsEl=document.querySelector('input[name="brs"]:checked');
+  if(brkdNum>0&&!brsEl){G('eBrkdR').classList.add('show');return;}
+  G('eBrkdR').classList.remove('show');
+  var runHrs=prevHmr!==null?Math.max(0,hmrNum-prevHmr):0;
+  var idleHrs=Math.max(0,stdHours-runHrs-brkdNum);
+  var util=stdHours>0?(runHrs/stdHours*100).toFixed(1):'0';
+  var payload={
+    isEdit:isEditMode,rowNumber:editRowNum,date:date,
+    assetCode:code,description:desc||code,
+    prevHmr:prevHmr!==null?prevHmr:'',todayHmr:hmrNum,
+    runningHrs:runHrs.toFixed(2),breakdownHrs:brkdNum,
+    idleHrs:idleHrs.toFixed(2),stdHours:stdHours,utilization:util,
+    fuel:fuelNum,brkdReason:brsEl?brsEl.value:'',
+    status:brkdNum>0?'BREAKDOWN':'OPERATIONAL',
+    remarks:remarks,timestamp:new Date().toISOString()
   };
-
-  // Submit to Web App
-  if (!WEBAPP_URL || WEBAPP_URL === 'PASTE_WEBAPP_URL_HERE') {
-    // Demo mode — show success without saving
-    showSuccess(payload);
-    return;
-  }
-
-  var submitBtn = G('submitBtn');
-  submitBtn.disabled    = true;
-  submitBtn.textContent = 'Saving...';
-
-  fetch(WEBAPP_URL, {
-    method:  'POST',
-    mode:    'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload)
-  })
-  .then(function()  { showSuccess(payload); })
-  .catch(function() { showSuccess(payload); }) // no-cors always fires catch — treat as success
-  .finally(function() {
-    submitBtn.disabled    = false;
-    submitBtn.textContent = isEditMode ? 'Update Entry' : 'Transmit Daily Report';
-  });
+  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE'){showSuccess(payload);return;}
+  var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
+  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(){showSuccess(payload);})
+    .catch(function(){showSuccess(payload);})
+    .finally(function(){btn.disabled=false;btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';});
 }
 
-// ================================================================
-//  SUCCESS SCREEN
-// ================================================================
-function showSuccess(p) {
-  G('succTitle').textContent = p.isEdit ? 'Entry Updated' : 'Submitted';
-  G('sAsset').textContent    = p.assetCode + ' — ' + p.description;
-  G('sDetails').innerHTML    =
-    'HMR: ' + p.todayHmr + ' &nbsp;|&nbsp; Running: ' + p.runningHrs + ' hrs' +
-    ' &nbsp;|&nbsp; Idle: ' + p.idleHrs + ' hrs' +
-    (p.breakdownHrs > 0 ? '<br>Breakdown: ' + p.breakdownHrs + ' hrs — ' + p.brkdReason : '') +
-    '<br>Fuel: ' + p.fuel + ' L &nbsp;|&nbsp; Utilization: ' + p.utilization + '%';
-  G('sTs').textContent = 'Logged: ' + new Date().toLocaleString();
+function showSuccess(p){
+  G('sTitle').textContent=p.isEdit?'Entry Updated':'Submitted';
+  G('sAsset').textContent=p.assetCode+' — '+p.description;
+  G('sSummary').innerHTML='HMR: '+p.todayHmr+' &nbsp;|&nbsp; Running: '+p.runningHrs+' hrs &nbsp;|&nbsp; Idle: '+p.idleHrs+' hrs'+(p.breakdownHrs>0?'<br>Breakdown: '+p.breakdownHrs+' hrs — '+p.brkdReason:'')+'<br>Fuel: '+p.fuel+' L &nbsp;|&nbsp; Utilization: '+p.utilization+'%';
+  G('sTs').textContent='Logged: '+new Date().toLocaleString('en-IN');
   G('successScreen').classList.add('show');
 }
 
-// ================================================================
-//  RESET FORM
-// ================================================================
-function resetForm() {
+function resetForm(){
   G('successScreen').classList.remove('show');
-  G('fDate').value    = todayISO();
-  G('fHmr').value     = '';
-  G('fBrkd').value    = '';
-  G('fFuel').value    = '';
-  G('fRemarks').value = '';
-  document.querySelectorAll('.r-btn').forEach(function(b) { b.classList.remove('on'); });
-  document.querySelectorAll('input[name="brs"]').forEach(function(r) { r.checked = false; });
-  G('bLocked').style.display = 'block';
-  G('bGrid').style.display   = 'none';
-  G('eFuel').classList.remove('on');
-  G('eBrkdR').classList.remove('on');
-  setEditMode(false);
-  prevHmr = null;
-  recalcHours();
-  var code = G('fCode').value;
-  setProgress(code ? 2 : 1);
+  G('fDate').value=todayISO();G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';
+  document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
+  G('bLocked').style.display='block';G('bGrid').style.display='none';
+  G('eFuel').classList.remove('show');G('eBrkdR').classList.remove('show');
+  setEditMode(false);prevHmr=null;recalcHours();
+  setProgress(G('fCode').value?2:1);
 }
 
-// ================================================================
-//  INIT — runs when page fully loads
-// ================================================================
-document.addEventListener('DOMContentLoaded', function() {
-  // Start clock
-  setInterval(tick, 1000);
-  tick();
-
-  // Set today's date
-  G('fDate').value = todayISO();
-
-  // Session ID
-  var sid = 'RPT-' + Date.now().toString(36).toUpperCase().slice(-6);
-  G('sessionId').textContent = 'SESSION ' + sid;
-  G('sSessId').textContent   = sid;
-
-  // Wire reason buttons
-  document.querySelectorAll('.r-btn input').forEach(function(r) {
-    r.addEventListener('change', function() {
-      document.querySelectorAll('.r-btn').forEach(function(b) { b.classList.remove('on'); });
-      this.closest('.r-btn').classList.add('on');
-      setProgress(4);
+document.addEventListener('DOMContentLoaded',function(){
+  setInterval(tick,1000);tick();
+  G('fDate').value=todayISO();
+  var sid='RPT-'+Date.now().toString(36).toUpperCase().slice(-6);
+  G('sessionId').textContent='SESSION '+sid;G('sSessId').textContent=sid;
+  document.querySelectorAll('.r-btn input').forEach(function(r){
+    r.addEventListener('change',function(){
+      document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
+      this.closest('.r-btn').classList.add('on');setProgress(4);
     });
   });
-
-  // Load asset from QR URL parameter
   loadAsset(readQR());
 });
 </script>

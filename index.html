@@ -1007,9 +1007,7 @@ function doSubmit(){
   var hmrNum=parseFloat(hmrStr),brkdNum=parseFloat(brkdStr)||0,fuelNum=parseFloat(fuelStr)||0;
 
   if(prevHmr!==null&&hmrNum<prevHmr){
-    alert("ERROR: Today's HMR ("+hmrNum+") cannot be less than Previous HMR ("+prevHmr+").
-
-HMR is a cumulative odometer — it always increases.");
+    alert("ERROR: Today's HMR ("+hmrNum+") cannot be less than Previous HMR ("+prevHmr+").\n\nHMR is a cumulative odometer — it always increases.");
     return;
   }
 

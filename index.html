@@ -569,7 +569,9 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
     <div class="sec-badge dim">OPTIONAL</div>
   </div>
   <div class="sec-body">
-    <textarea class="fi" id="fRemarks" placeholder="Pending repairs, abnormal sounds, oil level, maintenance notes..."></textarea>
+    <div class="field">
+      <textarea class="fi" id="fRemarks" placeholder="Pending repairs, abnormal sounds, oil level, maintenance notes..."></textarea>
+    </div>
   </div>
 </div>
 
@@ -589,7 +591,10 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 
 <script>
 // ================================================================
-//  CONFIGURATION — paste your deployed Web App URL here
+//  CONFIGURATION
+//  WEBAPP_URL = your deployed Apps Script /exec URL
+//  The placeholder check below uses 'YOUR_WEBAPP_URL_HERE'
+//  so setting a real URL here will ALWAYS trigger the fetch.
 // ================================================================
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec';
 var SHEET_ID   = '1iBjWkRJXZEAKicPv9ILlozlC96fBkA1a_HplF5zqqE0';
@@ -679,9 +684,6 @@ function setEditMode(isEdit,rowNum){
 
 // ================================================================
 //  localStorage LAYER
-//  Saves entry data per device — instant access, no network needed.
-//  Works as first-line defence against duplicates.
-//  Web App is second line (server-side authoritative check).
 // ================================================================
 function lsKey(code, date){return 'lt_entry_'+code+'_'+date;}
 function lsPrevKey(code){return 'lt_prevhmr_'+code;}
@@ -689,7 +691,6 @@ function lsPrevKey(code){return 'lt_prevhmr_'+code;}
 function lsSave(code, date, data){
   try{
     localStorage.setItem(lsKey(code,date), JSON.stringify(data));
-    // Also update prevHmr cache
     if(data.hmr){localStorage.setItem(lsPrevKey(code), String(data.hmr));}
   }catch(e){}
 }
@@ -733,12 +734,12 @@ function splitCSV(l){var r=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=
 
 // ================================================================
 //  FETCH ENTRY STATUS FROM WEB APP
-//  This now works correctly because Code.gs uses normalizeDate()
-//  to handle the Date object vs string comparison bug.
+//  *** FIX: placeholder is 'YOUR_WEBAPP_URL_HERE' — not the real URL ***
 // ================================================================
 function fetchEntryStatus(code, date){
-  if(!WEBAPP_URL||WEBAPP_URL==='https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec'){
-    return Promise.resolve(null); // no Web App configured
+  // ▼▼▼ BUG FIX #1: placeholder string changed so real URL always passes through ▼▼▼
+  if(!WEBAPP_URL || WEBAPP_URL === 'YOUR_WEBAPP_URL_HERE'){
+    return Promise.resolve(null);
   }
   var url=WEBAPP_URL+'?action=check&code='+encodeURIComponent(code)+'&date='+encodeURIComponent(date)+'&t='+Date.now();
   var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},10000);
@@ -789,14 +790,7 @@ function prefillExisting(ex){
 }
 
 // ================================================================
-//  LOAD ASSET — main entry point called on page load
-//
-//  TWO-LAYER approach:
-//  Layer 1: localStorage — instant, works offline, same device
-//  Layer 2: Web App — authoritative, works across devices
-//
-//  Layer 1 runs FIRST (zero delay).
-//  Layer 2 runs in background and updates if different.
+//  LOAD ASSET
 // ================================================================
 function loadAsset(code){
   if(!code){renderAsset('',null);return;}
@@ -806,23 +800,17 @@ function loadAsset(code){
   G('fCode').value=code;
   var date=G('fDate').value||todayISO();
 
-  // Show local asset data instantly
   var localA=LOCAL_DB[code];
   if(localA){renderAsset(code,localA);stdHours=localA.s||24;}
 
-  // LAYER 1: Check localStorage immediately (no network)
   var lsEntry=lsGetEntry(code,date);
   var lsPrev=lsGetPrevHmr(code);
 
-  // Apply localStorage prevHmr instantly
-  // (this is the HMR from the PREVIOUS day's submission on this device)
   if(lsPrev!==null && (lsEntry===null || lsEntry.date!==date)){
-    // Only use lsPrev if it's not today's entry
     applyPrevHmr(lsPrev);
   }
 
   if(lsEntry){
-    // Today's entry found in localStorage → edit mode immediately
     applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev);
     prefillExisting({
       rowNumber: lsEntry.rowNumber||null,
@@ -835,26 +823,20 @@ function loadAsset(code){
     hideLoading();
   }
 
-  // LAYER 2: Fetch from Web App + Sheet in background
-  // This updates localStorage data with authoritative server data
   Promise.all([fetchAssetDB(), fetchEntryStatus(code,date)])
     .then(function(results){
       hideLoading();
-      var es=results[1]; // null if Web App not configured or failed
+      var es=results[1];
 
-      // Update asset details from live sheet
       var a=LIVE_DB[code]||LOCAL_DB[code]||null;
       renderAsset(code,a);
       if(a)stdHours=a.s||24;
 
       if(es && es.ok){
-        // Web App returned authoritative data — use it
         applyPrevHmr(es.prevHmr);
 
         if(es.existing){
-          // Server confirms today's entry exists
           prefillExisting(es.existing);
-          // Also save to localStorage for next time
           lsSave(code, date, {
             rowNumber: es.existing.rowNumber,
             hmr:       es.existing.hmr,
@@ -865,11 +847,9 @@ function loadAsset(code){
             prevHmr:   es.prevHmr
           });
         } else if(!lsEntry){
-          // No entry anywhere
           setEditMode(false);setProgress(2);
         }
       } else if(!lsEntry){
-        // Web App not configured/failed and no localStorage — fresh entry
         setEditMode(false);setProgress(2);
       }
     })
@@ -959,7 +939,6 @@ function onDateChange(){
   G('fPrevHmr').value='Checking...';
   var date=G('fDate').value;
 
-  // Check localStorage first
   var lsEntry=lsGetEntry(code,date);
   var lsPrev=lsGetPrevHmr(code);
 
@@ -969,7 +948,6 @@ function onDateChange(){
     return;
   }
 
-  // Fall back to Web App
   fetchEntryStatus(code,date)
     .then(function(es){
       if(es&&es.ok){
@@ -992,6 +970,9 @@ function onDateChange(){
 
 // ================================================================
 //  SUBMIT
+//  *** FIX #1: placeholder changed to 'YOUR_WEBAPP_URL_HERE'      ***
+//  *** FIX #2: Content-Type changed to text/plain to avoid CORS   ***
+//              preflight with mode:no-cors. Body stays JSON text.  ***
 // ================================================================
 function doSubmit(){
   var code=G('fCode').value.trim(),desc=G('fDesc').value.trim();
@@ -1030,8 +1011,7 @@ function doSubmit(){
     remarks:remarks,timestamp:new Date().toISOString()
   };
 
-  // Save to localStorage immediately — this prevents duplicates
-  // on this device regardless of network
+  // Save to localStorage immediately
   var lsData={
     rowNumber:editRowNum,hmr:hmrNum,brkd:brkdNum,fuel:fuelNum,
     remarks:remarks,brkdReason:brsEl?brsEl.value:'',
@@ -1039,17 +1019,43 @@ function doSubmit(){
   };
   lsSave(code,date,lsData);
 
-  if(!WEBAPP_URL||WEBAPP_URL==='https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec'){
-    // No Web App configured — localStorage only mode
-    showSuccess(payload);return;
+  // ▼▼▼ BUG FIX #1: placeholder is now 'YOUR_WEBAPP_URL_HERE'
+  //     so the real URL above will ALWAYS reach the fetch() call ▼▼▼
+  if(!WEBAPP_URL || WEBAPP_URL === 'YOUR_WEBAPP_URL_HERE'){
+    // Offline / no Web App configured — localStorage only
+    showSuccess(payload);
+    return;
   }
 
-  var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
+  var btn=G('submitBtn');
+  btn.disabled=true;
+  btn.textContent='Saving...';
 
-  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-    .then(function(){showSuccess(payload);})
-    .catch(function(){showSuccess(payload);}) // no-cors always fires catch
-    .finally(function(){btn.disabled=false;btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';});
+  // ▼▼▼ BUG FIX #2: Content-Type changed from 'application/json'
+  //     to 'text/plain;charset=utf-8'
+  //     'application/json' with mode:no-cors triggers a CORS preflight
+  //     (OPTIONS) which Google Apps Script does NOT handle — the POST
+  //     was silently dropped. 'text/plain' is a "simple" content type
+  //     that skips preflight. doPost still parses e.postData.contents
+  //     as JSON — no server-side change needed. ▼▼▼
+  fetch(WEBAPP_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(){
+    showSuccess(payload);
+  })
+  .catch(function(){
+    // no-cors always resolves — a catch here means network is down
+    // Data already saved to localStorage, so show success anyway
+    showSuccess(payload);
+  })
+  .finally(function(){
+    btn.disabled=false;
+    btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';
+  });
 }
 
 function showSuccess(p){

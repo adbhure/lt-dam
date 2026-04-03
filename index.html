@@ -589,14 +589,14 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 
 <script>
 // ================================================================
-//  CONFIGURATION
+//  CONFIGURATION — paste your deployed Web App URL here
 // ================================================================
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwztdAnfGUZmvnsPuPjb67sTEWKsM-MzA5WUgBDVewReCLfU7UstW5M2HOl-XQ0w00Wbg/exec';  // ← Paste your Web App /exec URL here
+var WEBAPP_URL = 'PASTE_WEBAPP_URL_HERE';
 var SHEET_ID   = '1iBjWkRJXZEAKicPv9ILlozlC96fBkA1a_HplF5zqqE0';
 var SHEET_TAB  = 'ASSET_MASTER';
 
 // ================================================================
-//  LOCAL ASSET DATABASE (instant fallback — no network required)
+//  LOCAL ASSET DB — instant fallback
 // ================================================================
 var LOCAL_DB = {
   '25237829':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
@@ -633,20 +633,16 @@ var LOCAL_DB = {
 
 // ── Runtime state ──
 var LIVE_DB    = {};
-var prevHmr    = null;   // previous day HMR for this asset
-var stdHours   = 24;     // standard hours for this asset type
-var isEditMode = false;  // true when today's entry already exists
-var editRowNum = null;   // sheet row number of that entry
+var prevHmr    = null;
+var stdHours   = 24;
+var isEditMode = false;
+var editRowNum = null;
 
 function G(id){return document.getElementById(id);}
 var MO=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function pad2(n){return String(n).padStart(2,'0');}
 function todayISO(){return new Date().toISOString().slice(0,10);}
-
-function readQR(){
-  try{var p=new URLSearchParams(window.location.search);return(p.get('asset')||p.get('code')||p.get('a')||'').trim().toUpperCase();}
-  catch(e){return '';}
-}
+function readQR(){try{var p=new URLSearchParams(window.location.search);return(p.get('asset')||p.get('code')||p.get('a')||'').trim().toUpperCase();}catch(e){return '';}}
 
 function tick(){
   try{
@@ -681,9 +677,42 @@ function setEditMode(isEdit,rowNum){
   }
 }
 
-// ── Fetch asset list from Google Sheets CSV ──
+// ================================================================
+//  localStorage LAYER
+//  Saves entry data per device — instant access, no network needed.
+//  Works as first-line defence against duplicates.
+//  Web App is second line (server-side authoritative check).
+// ================================================================
+function lsKey(code, date){return 'lt_entry_'+code+'_'+date;}
+function lsPrevKey(code){return 'lt_prevhmr_'+code;}
+
+function lsSave(code, date, data){
+  try{
+    localStorage.setItem(lsKey(code,date), JSON.stringify(data));
+    // Also update prevHmr cache
+    if(data.hmr){localStorage.setItem(lsPrevKey(code), String(data.hmr));}
+  }catch(e){}
+}
+
+function lsGetEntry(code, date){
+  try{
+    var v=localStorage.getItem(lsKey(code,date));
+    return v ? JSON.parse(v) : null;
+  }catch(e){return null;}
+}
+
+function lsGetPrevHmr(code){
+  try{
+    var v=localStorage.getItem(lsPrevKey(code));
+    return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : null;
+  }catch(e){return null;}
+}
+
+// ================================================================
+//  FETCH ASSET MASTER FROM SHEETS CSV
+// ================================================================
 function fetchAssetDB(){
-  if(!SHEET_ID)return Promise.resolve();
+  if(!SHEET_ID) return Promise.resolve();
   var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB)+'&t='+Date.now();
   var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},8000);
   return fetch(url,{cache:'no-store',signal:ctrl.signal})
@@ -700,24 +729,27 @@ function fetchAssetDB(){
     .catch(function(){clearTimeout(t);});
 }
 
-function splitCSV(l){
-  var r=[],cur='',q=false;
-  for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;}}
-  r.push(cur);return r;
-}
+function splitCSV(l){var r=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;}}r.push(cur);return r;}
 
-// ── Fetch entry status from Web App ──
-// Returns: {prevHmr, prevDate, existing:{rowNumber,hmr,brkd,fuel,remarks,brkdReason}}
-function fetchEntryStatus(code,date){
-  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE')return Promise.resolve({prevHmr:null,existing:null});
+// ================================================================
+//  FETCH ENTRY STATUS FROM WEB APP
+//  This now works correctly because Code.gs uses normalizeDate()
+//  to handle the Date object vs string comparison bug.
+// ================================================================
+function fetchEntryStatus(code, date){
+  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE'){
+    return Promise.resolve(null); // no Web App configured
+  }
   var url=WEBAPP_URL+'?action=check&code='+encodeURIComponent(code)+'&date='+encodeURIComponent(date)+'&t='+Date.now();
   var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},10000);
   return fetch(url,{signal:ctrl.signal})
     .then(function(r){clearTimeout(t);return r.json();})
-    .catch(function(){clearTimeout(t);return {prevHmr:null,existing:null};});
+    .catch(function(){clearTimeout(t);return null;});
 }
 
-// ── Apply prevHmr to UI ──
+// ================================================================
+//  APPLY PREVIOUS HMR
+// ================================================================
 function applyPrevHmr(val){
   if(val!==null&&val!==undefined&&!isNaN(parseFloat(val))){
     prevHmr=parseFloat(val);
@@ -728,21 +760,22 @@ function applyPrevHmr(val){
   } else {
     prevHmr=null;
     G('fPrevHmr').value='';
-    G('fPrevHmr').placeholder='No previous entry (first scan)';
+    G('fPrevHmr').placeholder='No previous entry (first scan ever)';
     G('fPrevHmr').className='fi prevhmr';
     G('calcPrev').textContent='—';
     G('calcPrev').className='hmr-box-val hv-empty';
   }
 }
 
-// ── Prefill form with existing entry data ──
+// ================================================================
+//  PREFILL FORM WITH EXISTING ENTRY
+// ================================================================
 function prefillExisting(ex){
   setEditMode(true,ex.rowNumber);
   if(ex.hmr!==undefined&&ex.hmr!=='')G('fHmr').value=ex.hmr;
   if(ex.brkd!==undefined)G('fBrkd').value=ex.brkd||0;
   if(ex.fuel!==undefined)G('fFuel').value=ex.fuel||0;
   if(ex.remarks)G('fRemarks').value=ex.remarks;
-  // Restore radio selection
   if(ex.brkdReason){
     var radios=document.querySelectorAll('input[name="brs"]');
     for(var i=0;i<radios.length;i++){
@@ -752,33 +785,99 @@ function prefillExisting(ex){
       }
     }
   }
-  recalcHours();
-  onBreakdown();
-  setProgress(3);
+  recalcHours();onBreakdown();setProgress(3);
 }
 
-// ── Main loadAsset ──
+// ================================================================
+//  LOAD ASSET — main entry point called on page load
+//
+//  TWO-LAYER approach:
+//  Layer 1: localStorage — instant, works offline, same device
+//  Layer 2: Web App — authoritative, works across devices
+//
+//  Layer 1 runs FIRST (zero delay).
+//  Layer 2 runs in background and updates if different.
+// ================================================================
 function loadAsset(code){
   if(!code){renderAsset('',null);return;}
+
   showLoading('Loading asset...');
-  G('aCode').textContent=code;G('fCode').value=code;
+  G('aCode').textContent=code;
+  G('fCode').value=code;
   var date=G('fDate').value||todayISO();
+
+  // Show local asset data instantly
   var localA=LOCAL_DB[code];
   if(localA){renderAsset(code,localA);stdHours=localA.s||24;}
-  Promise.all([fetchAssetDB(),fetchEntryStatus(code,date)])
-    .then(function(res){
+
+  // LAYER 1: Check localStorage immediately (no network)
+  var lsEntry=lsGetEntry(code,date);
+  var lsPrev=lsGetPrevHmr(code);
+
+  // Apply localStorage prevHmr instantly
+  // (this is the HMR from the PREVIOUS day's submission on this device)
+  if(lsPrev!==null && (lsEntry===null || lsEntry.date!==date)){
+    // Only use lsPrev if it's not today's entry
+    applyPrevHmr(lsPrev);
+  }
+
+  if(lsEntry){
+    // Today's entry found in localStorage → edit mode immediately
+    applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev);
+    prefillExisting({
+      rowNumber: lsEntry.rowNumber||null,
+      hmr:       lsEntry.hmr,
+      brkd:      lsEntry.brkd,
+      fuel:      lsEntry.fuel,
+      remarks:   lsEntry.remarks,
+      brkdReason:lsEntry.brkdReason
+    });
+    hideLoading();
+  }
+
+  // LAYER 2: Fetch from Web App + Sheet in background
+  // This updates localStorage data with authoritative server data
+  Promise.all([fetchAssetDB(), fetchEntryStatus(code,date)])
+    .then(function(results){
       hideLoading();
-      var es=res[1]||{};
+      var es=results[1]; // null if Web App not configured or failed
+
+      // Update asset details from live sheet
       var a=LIVE_DB[code]||LOCAL_DB[code]||null;
       renderAsset(code,a);
       if(a)stdHours=a.s||24;
-      applyPrevHmr(es.prevHmr);
-      if(es.existing){prefillExisting(es.existing);}
-      else{setEditMode(false);setProgress(2);}
+
+      if(es && es.ok){
+        // Web App returned authoritative data — use it
+        applyPrevHmr(es.prevHmr);
+
+        if(es.existing){
+          // Server confirms today's entry exists
+          prefillExisting(es.existing);
+          // Also save to localStorage for next time
+          lsSave(code, date, {
+            rowNumber: es.existing.rowNumber,
+            hmr:       es.existing.hmr,
+            brkd:      es.existing.brkd,
+            fuel:      es.existing.fuel,
+            remarks:   es.existing.remarks,
+            brkdReason:es.existing.brkdReason,
+            prevHmr:   es.prevHmr
+          });
+        } else if(!lsEntry){
+          // No entry anywhere
+          setEditMode(false);setProgress(2);
+        }
+      } else if(!lsEntry){
+        // Web App not configured/failed and no localStorage — fresh entry
+        setEditMode(false);setProgress(2);
+      }
     })
     .catch(function(){
       hideLoading();
-      renderAsset(code,LOCAL_DB[code]||null);
+      var a=LOCAL_DB[code]||null;
+      renderAsset(code,a);
+      if(!lsEntry){setEditMode(false);setProgress(2);}
     });
 }
 
@@ -796,7 +895,7 @@ function renderAsset(code,a){
   if(a){
     G('aCode').className='a-code';G('aCode').textContent=code;
     G('aDesc').textContent=a.d;
-    G('statusPill').className='status-pill sp-loaded';G('statusPill').innerHTML='<div class="sp-dot"></div>LOADED';
+    if(!isEditMode){G('statusPill').className='status-pill sp-loaded';G('statusPill').innerHTML='<div class="sp-dot"></div>LOADED';}
     G('stdLabel').textContent='Std: '+a.s+' hrs/day';
     var cc=a.c==='Lighting'?'#f59e0b':'#3b82f6';
     G('aChips').innerHTML='<div class="chip"><div class="chip-dot" style="background:'+cc+'"></div>'+a.t+'</div><div class="chip"><div class="chip-dot" style="background:var(--green)"></div>'+a.c+'</div><div class="chip"><div class="chip-dot" style="background:var(--txt3)"></div>Std '+a.s+'h/day</div>';
@@ -811,15 +910,12 @@ function renderAsset(code,a){
   }
 }
 
-// ── Recalculate hours (runs on every keystroke) ──
+// ── Recalculate hours ──
 function recalcHours(){
   var todayVal=parseFloat(G('fHmr').value);
   var brkdVal=parseFloat(G('fBrkd').value)||0;
-  if(!isNaN(todayVal)){
-    G('calcToday').textContent=todayVal;G('calcToday').className='hmr-box-val hv-today';
-  } else {
-    G('calcToday').textContent='—';G('calcToday').className='hmr-box-val hv-empty';
-  }
+  if(!isNaN(todayVal)){G('calcToday').textContent=todayVal;G('calcToday').className='hmr-box-val hv-today';}
+  else{G('calcToday').textContent='—';G('calcToday').className='hmr-box-val hv-empty';}
   G('mBrkd').textContent=brkdVal>0?brkdVal.toFixed(1):'0';
   if(isNaN(todayVal)){
     G('calcRun').textContent='—';G('calcRun').className='hmr-box-val hv-empty';
@@ -840,13 +936,12 @@ function recalcHours(){
   var fill=G('utilFill');
   fill.style.width=(hasCalc?util:0)+'%';
   fill.style.background=util>=75?'var(--green)':util>=40?'var(--amber)':'var(--red)';
-  if(!hasCalc){G('calcStatus').textContent='No prev entry';G('calcStatus').style.color='var(--amber)';}
+  if(!hasCalc){G('calcStatus').textContent='No prev HMR';G('calcStatus').style.color='var(--amber)';}
   else if(brkdVal>0){G('calcStatus').textContent='BREAKDOWN';G('calcStatus').style.color='var(--red)';}
   else{G('calcStatus').textContent=util.toFixed(1)+'% util';G('calcStatus').style.color=util>=75?'var(--green)':'var(--amber)';}
   if(!isNaN(todayVal)&&todayVal>0)setProgress(3);
 }
 
-// ── Breakdown section toggle ──
 function onBreakdown(){
   var v=parseFloat(G('fBrkd').value)||0;
   G('bLocked').style.display=v>0?'none':'block';
@@ -859,44 +954,71 @@ function onBreakdown(){
   recalcHours();
 }
 
-// ── Date change: re-check entry status ──
 function onDateChange(){
   var code=G('fCode').value.trim();if(!code)return;
   G('fPrevHmr').value='Checking...';
-  fetchEntryStatus(code,G('fDate').value)
+  var date=G('fDate').value;
+
+  // Check localStorage first
+  var lsEntry=lsGetEntry(code,date);
+  var lsPrev=lsGetPrevHmr(code);
+
+  if(lsEntry){
+    applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev);
+    prefillExisting({rowNumber:lsEntry.rowNumber,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});
+    return;
+  }
+
+  // Fall back to Web App
+  fetchEntryStatus(code,date)
     .then(function(es){
-      es=es||{};
-      applyPrevHmr(es.prevHmr);
-      if(es.existing){prefillExisting(es.existing);}
-      else{
-        setEditMode(false);
-        G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';
-        document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
-        document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
-        G('bLocked').style.display='block';G('bGrid').style.display='none';
-        recalcHours();setProgress(2);
+      if(es&&es.ok){
+        applyPrevHmr(es.prevHmr);
+        if(es.existing){prefillExisting(es.existing);}
+        else{
+          setEditMode(false);
+          G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';
+          document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
+          document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
+          G('bLocked').style.display='block';G('bGrid').style.display='none';
+          recalcHours();setProgress(2);
+        }
+      } else {
+        applyPrevHmr(lsPrev);
+        setEditMode(false);recalcHours();setProgress(2);
       }
     });
 }
 
-// ── Submit ──
+// ================================================================
+//  SUBMIT
+// ================================================================
 function doSubmit(){
   var code=G('fCode').value.trim(),desc=G('fDesc').value.trim();
   var date=G('fDate').value,hmrStr=G('fHmr').value;
   var brkdStr=G('fBrkd').value,fuelStr=G('fFuel').value,remarks=G('fRemarks').value;
+
   if(!code){alert('No asset loaded. Scan the QR code first.');return;}
   if(!date){alert('Please select the report date.');return;}
   if(!hmrStr){alert("Please enter today's HMR reading.");return;}
   if(fuelStr===''){G('eFuel').classList.add('show');return;}
   G('eFuel').classList.remove('show');
+
   var hmrNum=parseFloat(hmrStr),brkdNum=parseFloat(brkdStr)||0,fuelNum=parseFloat(fuelStr)||0;
-  if(prevHmr!==null&&hmrNum<prevHmr){alert("ERROR: Today's HMR ("+hmrNum+") < Previous HMR ("+prevHmr+").\n\nHMR is cumulative and always increases.");return;}
+
+  if(prevHmr!==null&&hmrNum<prevHmr){
+    alert("ERROR: Today's HMR ("+hmrNum+") cannot be less than Previous HMR ("+prevHmr+").\n\nHMR is a cumulative odometer — it always increases.");
+    return;
+  }
+
   var brsEl=document.querySelector('input[name="brs"]:checked');
   if(brkdNum>0&&!brsEl){G('eBrkdR').classList.add('show');return;}
   G('eBrkdR').classList.remove('show');
+
   var runHrs=prevHmr!==null?Math.max(0,hmrNum-prevHmr):0;
   var idleHrs=Math.max(0,stdHours-runHrs-brkdNum);
   var util=stdHours>0?(runHrs/stdHours*100).toFixed(1):'0';
+
   var payload={
     isEdit:isEditMode,rowNumber:editRowNum,date:date,
     assetCode:code,description:desc||code,
@@ -907,18 +1029,33 @@ function doSubmit(){
     status:brkdNum>0?'BREAKDOWN':'OPERATIONAL',
     remarks:remarks,timestamp:new Date().toISOString()
   };
-  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE'){showSuccess(payload);return;}
+
+  // Save to localStorage immediately — this prevents duplicates
+  // on this device regardless of network
+  var lsData={
+    rowNumber:editRowNum,hmr:hmrNum,brkd:brkdNum,fuel:fuelNum,
+    remarks:remarks,brkdReason:brsEl?brsEl.value:'',
+    prevHmr:prevHmr!==null?prevHmr:undefined
+  };
+  lsSave(code,date,lsData);
+
+  if(!WEBAPP_URL||WEBAPP_URL==='PASTE_WEBAPP_URL_HERE'){
+    // No Web App configured — localStorage only mode
+    showSuccess(payload);return;
+  }
+
   var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
+
   fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(function(){showSuccess(payload);})
-    .catch(function(){showSuccess(payload);})
+    .catch(function(){showSuccess(payload);}) // no-cors always fires catch
     .finally(function(){btn.disabled=false;btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';});
 }
 
 function showSuccess(p){
   G('sTitle').textContent=p.isEdit?'Entry Updated':'Submitted';
   G('sAsset').textContent=p.assetCode+' — '+p.description;
-  G('sSummary').innerHTML='HMR: '+p.todayHmr+' &nbsp;|&nbsp; Running: '+p.runningHrs+' hrs &nbsp;|&nbsp; Idle: '+p.idleHrs+' hrs'+(p.breakdownHrs>0?'<br>Breakdown: '+p.breakdownHrs+' hrs — '+p.brkdReason:'')+'<br>Fuel: '+p.fuel+' L &nbsp;|&nbsp; Utilization: '+p.utilization+'%';
+  G('sSummary').innerHTML='HMR: '+p.todayHmr+' &nbsp;|&nbsp; Running: '+p.runningHrs+' hrs &nbsp;|&nbsp; Idle: '+p.idleHrs+' hrs'+(p.breakdownHrs>0?'<br>Breakdown: '+p.breakdownHrs+' hrs — '+p.brkdReason:'')+'<br>Fuel: '+p.fuel+' L &nbsp;|&nbsp; Util: '+p.utilization+'%';
   G('sTs').textContent='Logged: '+new Date().toLocaleString('en-IN');
   G('successScreen').classList.add('show');
 }

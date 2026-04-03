@@ -591,7 +591,7 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 // ================================================================
 //  CONFIGURATION — paste your deployed Web App URL here
 // ================================================================
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyXl2epNdyBxuYTKApBqCrAG-BUU0BbKeJJ7krakPw8wj6ELv5IOOic1UBFRmR9loyhyg/exec';
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec';
 var SHEET_ID   = '1iBjWkRJXZEAKicPv9ILlozlC96fBkA1a_HplF5zqqE0';
 var SHEET_TAB  = 'ASSET_MASTER';
 
@@ -737,7 +737,7 @@ function splitCSV(l){var r=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=
 //  to handle the Date object vs string comparison bug.
 // ================================================================
 function fetchEntryStatus(code, date){
-  if(!WEBAPP_URL||WEBAPP_URL==='https://script.google.com/macros/s/AKfycbyXl2epNdyBxuYTKApBqCrAG-BUU0BbKeJJ7krakPw8wj6ELv5IOOic1UBFRmR9loyhyg/exec'){
+  if(!WEBAPP_URL||WEBAPP_URL==='https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec'){
     return Promise.resolve(null); // no Web App configured
   }
   var url=WEBAPP_URL+'?action=check&code='+encodeURIComponent(code)+'&date='+encodeURIComponent(date)+'&t='+Date.now();
@@ -1007,7 +1007,9 @@ function doSubmit(){
   var hmrNum=parseFloat(hmrStr),brkdNum=parseFloat(brkdStr)||0,fuelNum=parseFloat(fuelStr)||0;
 
   if(prevHmr!==null&&hmrNum<prevHmr){
-    alert("ERROR: Today's HMR ("+hmrNum+") cannot be less than Previous HMR ("+prevHmr+").\n\nHMR is a cumulative odometer — it always increases.");
+    alert("ERROR: Today's HMR ("+hmrNum+") cannot be less than Previous HMR ("+prevHmr+").
+
+HMR is a cumulative odometer — it always increases.");
     return;
   }
 
@@ -1039,7 +1041,7 @@ function doSubmit(){
   };
   lsSave(code,date,lsData);
 
-  if(!WEBAPP_URL||WEBAPP_URL==='https://script.google.com/macros/s/AKfycbyXl2epNdyBxuYTKApBqCrAG-BUU0BbKeJJ7krakPw8wj6ELv5IOOic1UBFRmR9loyhyg/exec'){
+  if(!WEBAPP_URL||WEBAPP_URL==='https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec'){
     // No Web App configured — localStorage only mode
     showSuccess(payload);return;
   }

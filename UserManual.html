@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L&T AssetOps — User Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────────────── */
+:root {
+  --ink:     #0D1B2A;
+  --ink2:    #162032;
+  --ink3:    #1B2B3B;
+  --card:    #1E2D3E;
+  --rim:     #253548;
+  --rim2:    #2E4255;
+  --red:     #E8001D;
+  --red2:    #FF3344;
+  --blue:    #0EA5E9;
+  --green:   #22C55E;
+  --amber:   #F59E0B;
+  --purple:  #A855F7;
+  --txt:     #E2ECFF;
+  --txt2:    #A0B8D8;
+  --txt3:    #5A7A9C;
+  --mono:    'JetBrains Mono', monospace;
+  --head:    'Oswald', sans-serif;
+  --body:    'Source Sans 3', sans-serif;
+  --rad:     12px;
+  --rad2:    20px;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--body);
+  background: var(--ink);
+  color: var(--txt);
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ── NOISE TEXTURE ─────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 20% 20%, rgba(14,165,233,.07) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(232,0,29,.05) 0%, transparent 60%);
+}
+
+.page-wrap { position: relative; z-index: 1; }
+
+/* ── TOPBAR ─────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,27,42,.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--rim);
+  padding: 0 clamp(16px, 4vw, 60px);
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.lt-badge {
+  background: var(--red);
+  border-radius: 8px;
+  width: 44px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--head); font-size: 16px; font-weight: 700; color: #fff;
+  letter-spacing: -.5px;
+  box-shadow: 0 0 20px rgba(232,0,29,.4);
+  flex-shrink: 0;
+}
+.lt-meta { display: flex; flex-direction: column; gap: 1px; }
+.lt-name { font-family: var(--head); font-size: 13px; font-weight: 600; color: var(--txt); letter-spacing: .4px; }
+.lt-sub  { font-family: var(--mono); font-size: 9px; color: var(--txt3); letter-spacing: .5px; }
+
+.nav-links { display: flex; gap: 6px; }
+.nav-links a {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 1px;
+  text-transform: uppercase; text-decoration: none;
+  color: var(--txt3); padding: 6px 12px; border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all .2s;
+}
+.nav-links a:hover { color: var(--blue); border-color: var(--rim2); background: rgba(14,165,233,.06); }
+
+@media (max-width: 700px) { .nav-links { display: none; } }
+
+/* ── HERO ───────────────────────────────────── */
+.hero {
+  min-height: 90vh;
+  display: flex; align-items: center;
+  padding: clamp(60px, 10vh, 120px) clamp(16px, 6vw, 80px);
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 70% 50%, rgba(14,165,233,.09) 0%, transparent 55%),
+    radial-gradient(circle at 20% 80%, rgba(232,0,29,.06) 0%, transparent 45%);
+}
+.hero-content { position: relative; z-index: 1; max-width: 700px; }
+.hero-eyebrow {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--red);
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: block; width: 36px; height: 2px; background: var(--red);
+}
+.hero h1 {
+  font-family: var(--head); font-size: clamp(42px, 7vw, 88px);
+  font-weight: 700; line-height: 1;
+  color: var(--txt); letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+.hero h1 span { color: var(--blue); }
+.hero-desc {
+  font-size: clamp(15px, 2.2vw, 18px);
+  color: var(--txt2); max-width: 560px;
+  margin-bottom: 40px; line-height: 1.7;
+}
+.hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 48px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .8px;
+  text-transform: uppercase; border: 1px solid;
+}
+.badge-blue  { color: var(--blue);  border-color: rgba(14,165,233,.3);  background: rgba(14,165,233,.08); }
+.badge-green { color: var(--green); border-color: rgba(34,197,94,.3);   background: rgba(34,197,94,.08); }
+.badge-red   { color: var(--red);   border-color: rgba(232,0,29,.3);    background: rgba(232,0,29,.08); }
+.badge-dot   { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+.scroll-hint {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--txt3);
+}
+.scroll-arrow { animation: bounce 2s ease-in-out infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* ── SECTION WRAPPER ────────────────────────── */
+.section {
+  padding: clamp(60px, 8vh, 100px) clamp(16px, 6vw, 80px);
+}
+.section-alt { background: var(--ink2); }
+
+.section-header {
+  text-align: center; margin-bottom: 56px;
+}
+.section-eyebrow {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 12px;
+}
+.section-title {
+  font-family: var(--head); font-size: clamp(28px, 4vw, 46px);
+  font-weight: 700; color: var(--txt); letter-spacing: .5px;
+  margin-bottom: 12px;
+}
+.section-title span { color: var(--red); }
+.section-sub {
+  font-size: 16px; color: var(--txt2); max-width: 600px; margin: 0 auto;
+}
+
+/* ── SYSTEM OVERVIEW CARDS ─────────────────── */
+.overview-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px; max-width: 1100px; margin: 0 auto;
+}
+.ov-card {
+  background: var(--card);
+  border: 1px solid var(--rim);
+  border-radius: var(--rad2); padding: 28px;
+  position: relative; overflow: hidden;
+  transition: transform .25s, box-shadow .25s;
+}
+.ov-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,.4); }
+.ov-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.ov-card.blue::before  { background: var(--blue); }
+.ov-card.green::before { background: var(--green); }
+.ov-card.amber::before { background: var(--amber); }
+
+.ov-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin-bottom: 18px;
+}
+.ov-icon.blue  { background: rgba(14,165,233,.12); color: var(--blue); }
+.ov-icon.green { background: rgba(34,197,94,.12);  color: var(--green); }
+.ov-icon.amber { background: rgba(245,158,11,.12); color: var(--amber); }
+
+.ov-role {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.ov-card.blue  .ov-role { color: var(--blue); }
+.ov-card.green .ov-role { color: var(--green); }
+.ov-card.amber .ov-role { color: var(--amber); }
+
+.ov-title {
+  font-family: var(--head); font-size: 22px; font-weight: 600;
+  color: var(--txt); margin-bottom: 12px; letter-spacing: .3px;
+}
+.ov-desc { font-size: 14px; color: var(--txt2); line-height: 1.65; }
+
+/* ── WORKFLOW STEPS ──────────────────────────── */
+.workflow { max-width: 900px; margin: 0 auto; }
+.wf-step {
+  display: flex; gap: 24px; align-items: flex-start;
+  margin-bottom: 36px; position: relative;
+  opacity: 0; transform: translateX(-24px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.wf-step.visible { opacity: 1; transform: translateX(0); }
+.wf-step:not(:last-child)::after {
+  content: '';
+  position: absolute; left: 23px; top: 56px;
+  width: 2px; height: calc(100% - 20px);
+  background: linear-gradient(to bottom, var(--rim2), transparent);
+}
+.wf-num {
+  flex-shrink: 0; width: 48px; height: 48px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: var(--head); font-size: 18px; font-weight: 700;
+  border: 2px solid; position: relative; z-index: 1;
+}
+.wf-num.c-red    { background: rgba(232,0,29,.1);    border-color: var(--red);    color: var(--red); }
+.wf-num.c-blue   { background: rgba(14,165,233,.1);  border-color: var(--blue);   color: var(--blue); }
+.wf-num.c-purple { background: rgba(168,85,247,.1);  border-color: var(--purple); color: var(--purple); }
+.wf-num.c-green  { background: rgba(34,197,94,.1);   border-color: var(--green);  color: var(--green); }
+.wf-num.c-amber  { background: rgba(245,158,11,.1);  border-color: var(--amber);  color: var(--amber); }
+
+.wf-content { padding-top: 6px; flex: 1; }
+.wf-title { font-family: var(--head); font-size: 20px; font-weight: 600; color: var(--txt); margin-bottom: 6px; }
+.wf-desc  { font-size: 14.5px; color: var(--txt2); line-height: 1.65; }
+.wf-tip {
+  margin-top: 10px; padding: 10px 14px;
+  background: var(--card); border-left: 3px solid var(--blue);
+  border-radius: 0 8px 8px 0;
+  font-family: var(--mono); font-size: 11px; color: var(--txt3);
+}
+
+/* ── FORM FIELD TABLE ────────────────────────── */
+.field-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px; max-width: 1100px; margin: 0 auto;
+}
+.field-card {
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: var(--rad); padding: 20px;
+  display: flex; gap: 14px; align-items: flex-start;
+  transition: border-color .2s, background .2s;
+}
+.field-card:hover { border-color: var(--rim2); background: var(--ink3); }
+.field-badge {
+  flex-shrink: 0; padding: 3px 10px; border-radius: 20px;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 1px;
+  text-transform: uppercase; margin-top: 3px;
+  border: 1px solid;
+}
+.fb-auto   { color: var(--blue);  border-color: rgba(14,165,233,.4); background: rgba(14,165,233,.08); }
+.fb-req    { color: var(--green); border-color: rgba(34,197,94,.4);  background: rgba(34,197,94,.08); }
+.fb-cond   { color: var(--amber); border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.08); }
+.field-name { font-family: var(--head); font-size: 16px; font-weight: 600; color: var(--txt); margin-bottom: 4px; }
+.field-desc { font-size: 13.5px; color: var(--txt2); line-height: 1.55; }
+
+/* ── MOCK FORM ──────────────────────────────── */
+.mock-form-wrap {
+  max-width: 440px; margin: 0 auto 48px;
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: var(--rad2); overflow: hidden;
+}
+.mock-header {
+  background: var(--red); padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.mock-header-title { font-family: var(--head); font-size: 15px; font-weight: 600; color: #fff; }
+.mock-header-sub { font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,.7); letter-spacing: .5px; }
+.mock-body { padding: 20px; }
+.mock-field-group { margin-bottom: 16px; }
+.mock-label {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--txt3); margin-bottom: 6px; display: block;
+}
+.mock-input {
+  width: 100%; background: var(--ink2); border: 1px solid var(--rim2);
+  border-radius: 8px; padding: 10px 14px;
+  font-family: var(--body); font-size: 14px; color: var(--txt);
+}
+.mock-input.auto  { border-color: rgba(14,165,233,.4); color: var(--blue); background: rgba(14,165,233,.06); }
+.mock-input.green { border-color: rgba(34,197,94,.4);  color: var(--green); background: rgba(34,197,94,.06); }
+.mock-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mock-btn {
+  width: 100%; background: linear-gradient(135deg, var(--red), #ff3050);
+  border: none; border-radius: 10px; padding: 14px;
+  font-family: var(--head); font-size: 15px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase; color: #fff;
+  cursor: pointer; margin-top: 8px;
+  box-shadow: 0 6px 20px rgba(232,0,29,.3);
+  transition: transform .15s, box-shadow .15s;
+}
+.mock-btn:hover { transform: scale(1.02); box-shadow: 0 8px 28px rgba(232,0,29,.4); }
+
+/* ── CALC PANEL ─────────────────────────────── */
+.calc-demo {
+  background: var(--ink2); border: 1px solid var(--rim);
+  border-radius: var(--rad); padding: 16px; margin-top: 16px;
+}
+.calc-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.calc-box { background: var(--card); border: 1px solid var(--rim2); border-radius: 8px; padding: 10px 16px; text-align: center; }
+.calc-lbl { font-family: var(--mono); font-size: 8px; color: var(--txt3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.calc-val { font-family: var(--head); font-size: 28px; font-weight: 700; }
+.cv-prev { color: var(--txt2); } .cv-today { color: var(--blue); } .cv-run { color: var(--green); }
+.calc-op { font-family: var(--head); font-size: 22px; color: var(--txt3); }
+
+/* ── DASHBOARD GUIDE ────────────────────────── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 0 auto; }
+@media (max-width:700px) { .dash-grid { grid-template-columns: 1fr; } }
+.dash-card {
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: var(--rad2); padding: 24px;
+  transition: transform .25s, box-shadow .25s;
+}
+.dash-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(0,0,0,.4); }
+.dash-card-icon { font-size: 30px; margin-bottom: 14px; }
+.dash-card-title { font-family: var(--head); font-size: 18px; font-weight: 600; color: var(--txt); margin-bottom: 8px; }
+.dash-card-desc { font-size: 14px; color: var(--txt2); line-height: 1.65; }
+.dash-card-steps { margin-top: 14px; }
+.dash-step { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.dash-step-num {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(14,165,233,.15); border: 1px solid rgba(14,165,233,.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 9px; color: var(--blue); font-weight: 700;
+}
+.dash-step-text { font-size: 13.5px; color: var(--txt2); padding-top: 2px; }
+
+/* ── KPI MOCKUP ─────────────────────────────── */
+.kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 24px 0; }
+.kpi-card {
+  flex: 1; min-width: 120px;
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: 12px; padding: 16px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi-card.kc-blue::before  { background: var(--blue); }
+.kpi-card.kc-green::before { background: var(--green); }
+.kpi-card.kc-red::before   { background: var(--red); }
+.kpi-card.kc-amber::before { background: var(--amber); }
+.kpi-val { font-family: var(--head); font-size: 34px; font-weight: 700; margin-bottom: 4px; }
+.kc-blue  .kpi-val { color: var(--blue); }
+.kc-green .kpi-val { color: var(--green); }
+.kc-red   .kpi-val { color: var(--red); }
+.kc-amber .kpi-val { color: var(--amber); }
+.kpi-lbl { font-family: var(--mono); font-size: 9px; color: var(--txt3); letter-spacing: .8px; text-transform: uppercase; }
+
+/* ── FAQ ────────────────────────────────────── */
+.faq-wrap { max-width: 760px; margin: 0 auto; }
+.faq-item { border-bottom: 1px solid var(--rim); }
+.faq-q {
+  width: 100%; background: none; border: none; color: var(--txt);
+  padding: 20px 0; display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; cursor: pointer; text-align: left;
+  font-family: var(--head); font-size: 18px; font-weight: 500;
+  transition: color .2s;
+}
+.faq-q:hover { color: var(--blue); }
+.faq-icon {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--txt3);
+  transition: transform .3s, background .2s, color .2s;
+}
+.faq-item.open .faq-icon { transform: rotate(45deg); background: rgba(14,165,233,.12); color: var(--blue); }
+.faq-a {
+  font-size: 14.5px; color: var(--txt2); line-height: 1.7;
+  max-height: 0; overflow: hidden;
+  transition: max-height .4s ease, padding .3s;
+  padding: 0 0 0 0;
+}
+.faq-item.open .faq-a { max-height: 300px; padding-bottom: 20px; }
+
+/* ── BENEFITS STRIP ─────────────────────────── */
+.benefits-strip {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; max-width: 1100px; margin: 0 auto;
+}
+.benefit-card {
+  background: var(--card); border: 1px solid var(--rim);
+  border-radius: var(--rad); padding: 22px 18px; text-align: center;
+  transition: transform .25s;
+}
+.benefit-card:hover { transform: translateY(-4px); }
+.benefit-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+.benefit-stat { font-family: var(--head); font-size: 30px; font-weight: 700; margin-bottom: 4px; }
+.benefit-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 1px; color: var(--txt3); text-transform: uppercase; }
+
+/* ── FOOTER ─────────────────────────────────── */
+.footer {
+  background: var(--ink2); border-top: 1px solid var(--rim);
+  padding: clamp(32px, 5vh, 60px) clamp(16px, 6vw, 80px);
+  text-align: center;
+}
+.footer-logo { font-family: var(--head); font-size: 18px; color: var(--red); margin-bottom: 8px; letter-spacing: 1px; }
+.footer-sub { font-family: var(--mono); font-size: 9px; color: var(--txt3); letter-spacing: 1px; }
+
+/* ── SCROLL REVEAL ───────────────────────────── */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media (max-width: 600px) {
+  .hero h1 { font-size: 38px; }
+  .mock-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ── TOPBAR ── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="lt-badge">L&T</div>
+    <div class="lt-meta">
+      <div class="lt-name">Larsen &amp; Toubro</div>
+      <div class="lt-sub">HCI IC · MAHSR C3 · P&amp;M</div>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a href="#overview">Overview</a>
+    <a href="#operator">Operator Guide</a>
+    <a href="#form">Form Fields</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">User Manual &amp; Reference Guide</div>
+    <h1>AssetOps <span>Digital</span><br>Monitoring System</h1>
+    <p class="hero-desc">
+      A complete guide for field operators and management.
+      Learn how to scan QR codes, enter daily data, and view
+      real-time equipment reports on Looker Studio.
+    </p>
+    <div class="hero-badges">
+      <span class="badge badge-blue"><span class="badge-dot"></span>QR Code Enabled</span>
+      <span class="badge badge-green"><span class="badge-dot"></span>Google Sheets Sync</span>
+      <span class="badge badge-red"><span class="badge-dot"></span>Live Dashboard</span>
+    </div>
+    <div class="scroll-hint">
+      <span>Scroll to explore</span>
+      <span class="scroll-arrow">↓</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION 1: SYSTEM OVERVIEW ── -->
+<section class="section section-alt" id="overview">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">01 · System Overview</div>
+    <h2 class="section-title">How the System <span>Works Together</span></h2>
+    <p class="section-sub">Three components working as one seamless digital pipeline from the machine to the boardroom.</p>
+  </div>
+  <div class="overview-grid">
+    <div class="ov-card blue reveal">
+      <div class="ov-icon blue">📱</div>
+      <div class="ov-role">Field Operator</div>
+      <div class="ov-title">HTML Data Entry Form</div>
+      <div class="ov-desc">Operator scans the QR code on the machine. The form opens instantly on their phone, pre-fills the asset code, fetches the previous HMR, and guides them through entry step by step.</div>
+    </div>
+    <div class="ov-card green reveal" style="transition-delay:.1s">
+      <div class="ov-icon green">🗄️</div>
+      <div class="ov-role">Cloud Storage</div>
+      <div class="ov-title">Google Sheets Database</div>
+      <div class="ov-desc">All submitted data flows into Google Sheets (RAW_DATA). Formulas automatically calculate Running Hours, Idle Hours, and Utilization % with zero manual effort.</div>
+    </div>
+    <div class="ov-card amber reveal" style="transition-delay:.2s">
+      <div class="ov-icon amber">📊</div>
+      <div class="ov-role">Management</div>
+      <div class="ov-title">Looker Studio Dashboard</div>
+      <div class="ov-desc">Management views live KPIs, charts, and utilization trends on Looker Studio. Dashboard refreshes automatically. Filter by date, asset type, or category.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION 2: OPERATOR GUIDE ── -->
+<section class="section" id="operator">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">02 · Operator Guide</div>
+    <h2 class="section-title">How to <span>Enter Data</span></h2>
+    <p class="section-sub">Follow these five steps every day, one machine at a time. The entire process takes under 2 minutes per asset.</p>
+  </div>
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="wf-num c-red">1</div>
+      <div class="wf-content">
+        <div class="wf-title">Scan the QR Code on the Machine</div>
+        <div class="wf-desc">Open your phone's camera app. Point it at the QR code sticker on the machine. Tap the notification that appears to open the form. The form will load in your browser automatically.</div>
+        <div class="wf-tip">💡 You can also bookmark the link. Each machine has its own unique URL with the asset code pre-filled.</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num c-blue">2</div>
+      <div class="wf-content">
+        <div class="wf-title">Verify the Asset Details</div>
+        <div class="wf-desc">The Asset Code, Description, and Previous HMR load automatically from the system. Confirm that the correct machine name is displayed. The Previous HMR field is read-only — it comes from the server.</div>
+        <div class="wf-tip">💡 If "No previous entry" shows in the Previous HMR field, this is the first ever entry for this machine. That is normal.</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num c-purple">3</div>
+      <div class="wf-content">
+        <div class="wf-title">Enter Today's HMR Reading</div>
+        <div class="wf-desc">Walk to the machine and read the Hour Meter (the small display showing total running hours, like a car odometer). Type that exact number into the "Today's HMR" field. The system will instantly calculate Running Hours = Today − Previous.</div>
+        <div class="wf-tip">⚠️ Today's HMR must always be GREATER than or equal to Previous HMR. HMR only increases.</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num c-green">4</div>
+      <div class="wf-content">
+        <div class="wf-title">Enter Breakdown Hours &amp; Fuel</div>
+        <div class="wf-desc">If the machine had a breakdown today, enter the number of hours it was down. This unlocks the Breakdown Reason section — select the appropriate cause. Then enter fuel refilled in litres (enter 0 if no fuel was added).</div>
+        <div class="wf-tip">💡 The calculation panel shows Running Hrs, Idle Hrs, and Utilization % live as you type.</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-num c-amber">5</div>
+      <div class="wf-content">
+        <div class="wf-title">Review &amp; Submit</div>
+        <div class="wf-desc">Check the live calculation panel at the bottom of the form. Verify Running Hours and Utilization % look correct. Tap "Transmit Daily Report". A green success screen confirms your data is saved.</div>
+        <div class="wf-tip">💡 If you scan the same machine QR again on the same day, the form opens in Edit Mode with your previous entry loaded. You can update and re-submit.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOs and DON'Ts -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;margin:40px auto 0;">
+    <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:var(--rad);padding:22px;">
+      <div style="font-family:var(--head);font-size:16px;color:var(--green);margin-bottom:14px;letter-spacing:.5px;">✓ DO's</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--green);flex-shrink:0;">◆</span>Enter HMR from machine meter every single day</li>
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--green);flex-shrink:0;">◆</span>Enter 0 for fuel if no refill happened</li>
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--green);flex-shrink:0;">◆</span>Report even if machine was idle all day</li>
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--green);flex-shrink:0;">◆</span>Edit the existing entry if re-scanning same day</li>
+      </ul>
+    </div>
+    <div style="background:rgba(232,0,29,.06);border:1px solid rgba(232,0,29,.25);border-radius:var(--rad);padding:22px;">
+      <div style="font-family:var(--head);font-size:16px;color:var(--red);margin-bottom:14px;letter-spacing:.5px;">✗ DON'Ts</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--red);flex-shrink:0;">✕</span>Never type an HMR lower than the previous value</li>
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--red);flex-shrink:0;">✕</span>Never guess or estimate the meter reading</li>
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--red);flex-shrink:0;">✕</span>Never leave the fuel field empty</li>
+        <li style="font-size:13.5px;color:var(--txt2);display:flex;gap:8px;"><span style="color:var(--red);flex-shrink:0;">✕</span>Never submit twice for the same asset and date</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION 3: FORM FIELDS ── -->
+<section class="section section-alt" id="form">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">03 · Form Reference</div>
+    <h2 class="section-title">Data Entry Form — <span>Field by Field</span></h2>
+    <p class="section-sub">Every field explained. Know exactly what to enter and what the system calculates for you.</p>
+  </div>
+
+  <!-- Mock form -->
+  <div class="mock-form-wrap reveal">
+    <div class="mock-header">
+      <div>
+        <div class="mock-header-title">L&T · MAHSR C3 — Daily Report</div>
+        <div class="mock-header-sub">Asset Monitoring System · P&amp;M</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.6);">● LIVE</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-field-group">
+        <label class="mock-label">Asset Code *</label>
+        <div class="mock-input auto">25237829</div>
+      </div>
+      <div class="mock-field-group">
+        <label class="mock-label">Asset Description</label>
+        <div class="mock-input green">LIGHT MAST</div>
+      </div>
+      <div class="mock-field-group">
+        <label class="mock-label">Report Date *</label>
+        <div class="mock-input">02-04-2026</div>
+      </div>
+      <div class="mock-field-group">
+        <label class="mock-label">Previous HMR (auto-fetched)</label>
+        <div class="mock-input auto">2344</div>
+      </div>
+      <div class="mock-row">
+        <div class="mock-field-group">
+          <label class="mock-label">Today's HMR *</label>
+          <div class="mock-input">2368</div>
+        </div>
+        <div class="mock-field-group">
+          <label class="mock-label">Breakdown Hrs</label>
+          <div class="mock-input">0</div>
+        </div>
+      </div>
+      <div class="mock-field-group">
+        <label class="mock-label">Fuel Refilled (Litres) *</label>
+        <div class="mock-input">20</div>
+      </div>
+      <!-- Calc demo -->
+      <div class="calc-demo">
+        <div style="font-family:var(--mono);font-size:8.5px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Live Calculation</div>
+        <div class="calc-row">
+          <div class="calc-box"><div class="calc-lbl">Prev HMR</div><div class="calc-val cv-prev">2344</div></div>
+          <div class="calc-op">→</div>
+          <div class="calc-box"><div class="calc-lbl">Today HMR</div><div class="calc-val cv-today">2368</div></div>
+          <div class="calc-op">=</div>
+          <div class="calc-box"><div class="calc-lbl">Running Hrs</div><div class="calc-val cv-run">24</div></div>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--txt3);">
+          <span>Idle: <strong style="color:var(--blue)">0 hrs</strong></span>
+          <span>Breakdown: <strong style="color:var(--red)">0 hrs</strong></span>
+          <span>Utilization: <strong style="color:var(--green)">100%</strong></span>
+        </div>
+      </div>
+      <button class="mock-btn">Transmit Daily Report</button>
+    </div>
+  </div>
+
+  <!-- Field cards -->
+  <div class="field-grid">
+    <div class="field-card reveal">
+      <div class="field-badge fb-auto">Auto</div>
+      <div><div class="field-name">Asset Code</div><div class="field-desc">Pre-filled from the QR code URL. Read-only. You cannot and should not change this. If wrong, re-scan the correct QR.</div></div>
+    </div>
+    <div class="field-card reveal" style="transition-delay:.05s">
+      <div class="field-badge fb-auto">Auto</div>
+      <div><div class="field-name">Asset Description</div><div class="field-desc">Machine name from the database (e.g. "30 KVA DG SET"). Auto-populated. Verify it matches the machine you're standing at.</div></div>
+    </div>
+    <div class="field-card reveal" style="transition-delay:.1s">
+      <div class="field-badge fb-req">Required</div>
+      <div><div class="field-name">Report Date</div><div class="field-desc">Today's date. Defaults to current date automatically. Change only if submitting for a previous date (supervisor approval needed).</div></div>
+    </div>
+    <div class="field-card reveal" style="transition-delay:.15s">
+      <div class="field-badge fb-auto">Auto</div>
+      <div><div class="field-name">Previous HMR</div><div class="field-desc">Last recorded meter reading for this machine. Fetched from the server. Shows "No previous entry" on first-ever submission — this is normal.</div></div>
+    </div>
+    <div class="field-card reveal" style="transition-delay:.2s">
+      <div class="field-badge fb-req">Required</div>
+      <div><div class="field-name">Today's HMR</div><div class="field-desc">Read from the hour meter display on the machine. Must be greater than or equal to Previous HMR. The system validates this.</div></div>
+    </div>
+    <div class="field-card reveal" style="transition-delay:.25s">
+      <div class="field-badge fb-cond">Conditional</div>
+      <div><div class="field-name">Breakdown Hours</div><div class="field-desc">Hours the machine was non-functional today. Enter 0 if no breakdown. Values &gt; 0 unlock the Breakdown Reason selector below.</div></div>
+    </div>
+    <div class="field-card reveal" style="transition-delay:.3s">
+      <div class="field-badge fb-req">Required</div>
+      <div><div class="field-name">Fuel Refilled (Litres)</div><div class="field-desc">Litres of diesel added today. Must not be left blank. Enter 0 (zero) if no fuel was refilled. This tracks fuel consumption trends.</div></div>
+    </div>
+    <div class="field-card reveal" style="transition-delay:.35s">
+      <div class="field-badge fb-cond">Optional</div>
+      <div><div class="field-name">Remarks &amp; Notes</div><div class="field-desc">Any observations, abnormal sounds, pending maintenance or consumable usage. Leave blank if nothing to report.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION 4: DASHBOARD GUIDE ── -->
+<section class="section" id="dashboard">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">04 · Dashboard Guide</div>
+    <h2 class="section-title">Looker Studio — <span>Reading Reports</span></h2>
+    <p class="section-sub">For management and supervisors. View real-time equipment performance without touching any data.</p>
+  </div>
+
+  <!-- KPI mockup -->
+  <div class="reveal" style="max-width:800px;margin:0 auto 40px;">
+    <div style="background:var(--card);border:1px solid var(--rim);border-radius:var(--rad);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;">MAHSR C3 · Equipment Dashboard · 02-Apr-2026</span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--green);">● Live</span>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi-card kc-blue"><div class="kpi-val">28</div><div class="kpi-lbl">Reports Today</div></div>
+      <div class="kpi-card kc-green"><div class="kpi-val">24</div><div class="kpi-lbl">Operational</div></div>
+      <div class="kpi-card kc-red"><div class="kpi-val">4</div><div class="kpi-lbl">Breakdowns</div></div>
+      <div class="kpi-card kc-amber"><div class="kpi-val">73%</div><div class="kpi-lbl">Avg Utilization</div></div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="dash-card reveal">
+      <div class="dash-card-icon">🔗</div>
+      <div class="dash-card-title">How to Access the Dashboard</div>
+      <div class="dash-card-desc">The Looker Studio dashboard requires only a browser. No app installation needed.</div>
+      <div class="dash-card-steps">
+        <div class="dash-step"><div class="dash-step-num">1</div><div class="dash-step-text">Open the shared dashboard link in any browser</div></div>
+        <div class="dash-step"><div class="dash-step-num">2</div><div class="dash-step-text">No Google login required for view-only access</div></div>
+        <div class="dash-step"><div class="dash-step-num">3</div><div class="dash-step-text">Dashboard auto-refreshes every 60 minutes</div></div>
+        <div class="dash-step"><div class="dash-step-num">4</div><div class="dash-step-text">Works on mobile, tablet, and desktop</div></div>
+      </div>
+    </div>
+    <div class="dash-card reveal" style="transition-delay:.1s">
+      <div class="dash-card-icon">🔍</div>
+      <div class="dash-card-title">How to Filter Data</div>
+      <div class="dash-card-desc">Use the filter controls at the top of the dashboard to drill into specific data.</div>
+      <div class="dash-card-steps">
+        <div class="dash-step"><div class="dash-step-num">1</div><div class="dash-step-text">Date Range — select any date window</div></div>
+        <div class="dash-step"><div class="dash-step-num">2</div><div class="dash-step-text">Asset Type — Generator, Light Mast, etc.</div></div>
+        <div class="dash-step"><div class="dash-step-num">3</div><div class="dash-step-text">Category — Power-DG, Power-Heavy, Lighting</div></div>
+        <div class="dash-step"><div class="dash-step-num">4</div><div class="dash-step-text">Status — Operational vs Breakdown</div></div>
+      </div>
+    </div>
+    <div class="dash-card reveal" style="transition-delay:.2s">
+      <div class="dash-card-icon">📈</div>
+      <div class="dash-card-title">Key Charts to Look For</div>
+      <div class="dash-card-desc">The dashboard has multiple chart sections for different insights.</div>
+      <div class="dash-card-steps">
+        <div class="dash-step"><div class="dash-step-num">1</div><div class="dash-step-text">Equipment-wise utilization bar chart</div></div>
+        <div class="dash-step"><div class="dash-step-num">2</div><div class="dash-step-text">Daily trend — Running vs Idle vs Breakdown</div></div>
+        <div class="dash-step"><div class="dash-step-num">3</div><div class="dash-step-text">Top underutilized machines list</div></div>
+        <div class="dash-step"><div class="dash-step-num">4</div><div class="dash-step-text">Fuel consumption per asset per week</div></div>
+      </div>
+    </div>
+    <div class="dash-card reveal" style="transition-delay:.3s">
+      <div class="dash-card-icon">⚠️</div>
+      <div class="dash-card-title">Breakdown Monitoring</div>
+      <div class="dash-card-desc">Immediately identify which machines need attention today.</div>
+      <div class="dash-card-steps">
+        <div class="dash-step"><div class="dash-step-num">1</div><div class="dash-step-text">Red cards = assets with breakdowns today</div></div>
+        <div class="dash-step"><div class="dash-step-num">2</div><div class="dash-step-text">Breakdown reason breakdown pie chart</div></div>
+        <div class="dash-step"><div class="dash-step-num">3</div><div class="dash-step-text">Email alerts sent automatically at time of entry</div></div>
+        <div class="dash-step"><div class="dash-step-num">4</div><div class="dash-step-text">Daily summary email sent at 8:00 PM IST</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION 5: BENEFITS ── -->
+<section class="section section-alt">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">05 · System Benefits</div>
+    <h2 class="section-title">Why This <span>Matters</span></h2>
+  </div>
+  <div class="benefits-strip">
+    <div class="benefit-card reveal">
+      <span class="benefit-icon">⚡</span>
+      <div class="benefit-stat" style="color:var(--amber);">&lt; 1 min</div>
+      <div class="benefit-label">Data to Sheet</div>
+    </div>
+    <div class="benefit-card reveal" style="transition-delay:.07s">
+      <span class="benefit-icon">🛡️</span>
+      <div class="benefit-stat" style="color:var(--green);">100%</div>
+      <div class="benefit-label">No Duplicates</div>
+    </div>
+    <div class="benefit-card reveal" style="transition-delay:.14s">
+      <span class="benefit-icon">🌿</span>
+      <div class="benefit-stat" style="color:var(--blue);">0 Paper</div>
+      <div class="benefit-label">Fully Paperless</div>
+    </div>
+    <div class="benefit-card reveal" style="transition-delay:.21s">
+      <span class="benefit-icon">✅</span>
+      <div class="benefit-stat" style="color:var(--red);">Auto</div>
+      <div class="benefit-label">Calculations</div>
+    </div>
+    <div class="benefit-card reveal" style="transition-delay:.28s">
+      <span class="benefit-icon">🏗️</span>
+      <div class="benefit-stat" style="color:var(--purple);">150+</div>
+      <div class="benefit-label">Asset Ready</div>
+    </div>
+    <div class="benefit-card reveal" style="transition-delay:.35s">
+      <span class="benefit-icon">📊</span>
+      <div class="benefit-stat" style="color:var(--blue);">24/7</div>
+      <div class="benefit-label">Live Dashboard</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION 6: FAQ ── -->
+<section class="section" id="faq">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">06 · FAQ</div>
+    <h2 class="section-title">Frequently Asked <span>Questions</span></h2>
+    <p class="section-sub">Answers to the most common questions from operators and supervisors.</p>
+  </div>
+  <div class="faq-wrap">
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Why is "Previous HMR" showing as empty?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">This happens on the very first entry for a machine — there is no previous reading to fetch. Simply enter today's HMR reading and submit. From the next day onwards, the Previous HMR will auto-populate correctly from your submission.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        I scanned the QR again and my old data appeared. What do I do?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">This is correct behavior — the system detected that you already submitted an entry today for this machine and loaded it in Edit Mode (shown by the amber banner at the top). Update any field that needs correction and click "Update Entry". A new duplicate row will NOT be created.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        The form shows an error: "Today's HMR cannot be less than Previous HMR"
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">You entered a meter reading lower than the last recorded value. Double-check the reading on the machine's hour meter display. HMR works like an odometer — it always increases. If the meter was physically replaced, inform your supervisor immediately.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Data shows on the success screen but nothing appears in Google Sheet
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">This usually means the Web App URL in the form is not yet configured, or the Apps Script deployment needs to be refreshed. Please contact your system administrator. The data shown on the success screen is a confirmation of what was sent — the administrator can verify the server logs.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        The Breakdown Reason section is locked / not appearing
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">The Breakdown Reason section only appears when Breakdown Hours is greater than 0. Enter the number of breakdown hours in the "Breakdown Hrs" field. As soon as you type a value above 0, the reason grid will unlock automatically.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        Can management edit or delete data from the Sheet?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">The Google Sheet is protected so that viewers cannot edit, download, or print the data. Only the sheet owner (admin) can make changes. Management views data through Looker Studio, which is a read-only interface connected to the sheet.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        How do I add a new machine/asset to the system?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">Open the Google Sheet and go to the ASSET_MASTER tab. Add a new row with the Asset Code, Description, Type, Category, Standard Hours, and Make. Then generate a new QR code pointing to: https://adbhure.github.io/lt-dam/index.html?asset=NEWCODE. Print and stick it on the machine.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">
+        What happens if there is no internet while submitting?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a">The form requires internet to fetch Previous HMR and to save data to Google Sheets. If offline, the form may still show cached data from the device's local storage. Always ensure mobile data or WiFi is available before submitting. If submission fails, retry once connection is restored.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="footer-logo">L&T · MAHSR C3 · DIGITAL ASSET MONITORING</div>
+  <div class="footer-sub">HCI IC · P&amp;M Department · Version 1.0 · April 2026</div>
+  <div style="margin-top:16px;font-size:12px;color:var(--txt3);">For technical support, contact your P&amp;M department administrator.</div>
+</footer>
+
+</div><!-- /page-wrap -->
+
+<script>
+// ── SCROLL REVEAL ──────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      // For workflow steps
+      if (e.target.classList.contains('wf-step')) {
+        e.target.classList.add('visible');
+      }
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal, .wf-step').forEach(el => observer.observe(el));
+
+// ── FAQ TOGGLE ─────────────────────────────────────────────
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  // Open clicked if it was closed
+  if (!isOpen) item.classList.add('open');
+}
+
+// ── SMOOTH ACTIVE NAV ──────────────────────────────────────
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  sections.forEach(s => {
+    if (scrollY >= s.offsetTop - 120 && scrollY < s.offsetTop + s.offsetHeight - 120) {
+      navLinks.forEach(a => {
+        a.style.color = '';
+        if (a.getAttribute('href') === '#' + s.id) {
+          a.style.color = 'var(--blue)';
+        }
+      });
+    }
+  });
+});
+</script>
+</body>
+</html>

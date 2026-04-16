@@ -3,7 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>L&T AssetOps — Daily Monitoring</title>
+<title>L&T Asset — Daily Monitoring</title>
+
+<!-- ═══ PWA — Progressive Web App ═══════════════════════════ -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e8001d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Asset">
+<meta name="application-name" content="Asset">
+<meta name="msapplication-TileColor" content="#e8001d">
+<meta name="msapplication-TileImage" content="icons/icon-144.png">
+<!-- Apple touch icons (required for iOS Add to Home Screen) -->
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="96x96"  href="icons/icon-96.png">
+<!-- ═══════════════════════════════════════════════════════════ -->
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -569,9 +587,7 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
     <div class="sec-badge dim">OPTIONAL</div>
   </div>
   <div class="sec-body">
-    <div class="field">
-      <textarea class="fi" id="fRemarks" placeholder="Pending repairs, abnormal sounds, oil level, maintenance notes..."></textarea>
-    </div>
+    <textarea class="fi" id="fRemarks" placeholder="Pending repairs, abnormal sounds, oil level, maintenance notes..."></textarea>
   </div>
 </div>
 
@@ -591,10 +607,7 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 
 <script>
 // ================================================================
-//  CONFIGURATION
-//  WEBAPP_URL = your deployed Apps Script /exec URL
-//  The placeholder check below uses 'YOUR_WEBAPP_URL_HERE'
-//  so setting a real URL here will ALWAYS trigger the fetch.
+//  CONFIGURATION — paste your deployed Web App URL here
 // ================================================================
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec';
 var SHEET_ID   = '1iBjWkRJXZEAKicPv9ILlozlC96fBkA1a_HplF5zqqE0';
@@ -684,6 +697,9 @@ function setEditMode(isEdit,rowNum){
 
 // ================================================================
 //  localStorage LAYER
+//  Saves entry data per device — instant access, no network needed.
+//  Works as first-line defence against duplicates.
+//  Web App is second line (server-side authoritative check).
 // ================================================================
 function lsKey(code, date){return 'lt_entry_'+code+'_'+date;}
 function lsPrevKey(code){return 'lt_prevhmr_'+code;}
@@ -691,6 +707,7 @@ function lsPrevKey(code){return 'lt_prevhmr_'+code;}
 function lsSave(code, date, data){
   try{
     localStorage.setItem(lsKey(code,date), JSON.stringify(data));
+    // Also update prevHmr cache
     if(data.hmr){localStorage.setItem(lsPrevKey(code), String(data.hmr));}
   }catch(e){}
 }
@@ -734,12 +751,12 @@ function splitCSV(l){var r=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=
 
 // ================================================================
 //  FETCH ENTRY STATUS FROM WEB APP
-//  *** FIX: placeholder is 'YOUR_WEBAPP_URL_HERE' — not the real URL ***
+//  This now works correctly because Code.gs uses normalizeDate()
+//  to handle the Date object vs string comparison bug.
 // ================================================================
 function fetchEntryStatus(code, date){
-  // ▼▼▼ BUG FIX #1: placeholder string changed so real URL always passes through ▼▼▼
-  if(!WEBAPP_URL || WEBAPP_URL === 'YOUR_WEBAPP_URL_HERE'){
-    return Promise.resolve(null);
+  if(!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1){
+    return Promise.resolve(null); // no valid Web App URL configured
   }
   var url=WEBAPP_URL+'?action=check&code='+encodeURIComponent(code)+'&date='+encodeURIComponent(date)+'&t='+Date.now();
   var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},10000);
@@ -790,7 +807,14 @@ function prefillExisting(ex){
 }
 
 // ================================================================
-//  LOAD ASSET
+//  LOAD ASSET — main entry point called on page load
+//
+//  TWO-LAYER approach:
+//  Layer 1: localStorage — instant, works offline, same device
+//  Layer 2: Web App — authoritative, works across devices
+//
+//  Layer 1 runs FIRST (zero delay).
+//  Layer 2 runs in background and updates if different.
 // ================================================================
 function loadAsset(code){
   if(!code){renderAsset('',null);return;}
@@ -800,17 +824,23 @@ function loadAsset(code){
   G('fCode').value=code;
   var date=G('fDate').value||todayISO();
 
+  // Show local asset data instantly
   var localA=LOCAL_DB[code];
   if(localA){renderAsset(code,localA);stdHours=localA.s||24;}
 
+  // LAYER 1: Check localStorage immediately (no network)
   var lsEntry=lsGetEntry(code,date);
   var lsPrev=lsGetPrevHmr(code);
 
+  // Apply localStorage prevHmr instantly
+  // (this is the HMR from the PREVIOUS day's submission on this device)
   if(lsPrev!==null && (lsEntry===null || lsEntry.date!==date)){
+    // Only use lsPrev if it's not today's entry
     applyPrevHmr(lsPrev);
   }
 
   if(lsEntry){
+    // Today's entry found in localStorage → edit mode immediately
     applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev);
     prefillExisting({
       rowNumber: lsEntry.rowNumber||null,
@@ -823,20 +853,26 @@ function loadAsset(code){
     hideLoading();
   }
 
+  // LAYER 2: Fetch from Web App + Sheet in background
+  // This updates localStorage data with authoritative server data
   Promise.all([fetchAssetDB(), fetchEntryStatus(code,date)])
     .then(function(results){
       hideLoading();
-      var es=results[1];
+      var es=results[1]; // null if Web App not configured or failed
 
+      // Update asset details from live sheet
       var a=LIVE_DB[code]||LOCAL_DB[code]||null;
       renderAsset(code,a);
       if(a)stdHours=a.s||24;
 
       if(es && es.ok){
+        // Web App returned authoritative data — use it
         applyPrevHmr(es.prevHmr);
 
         if(es.existing){
+          // Server confirms today's entry exists
           prefillExisting(es.existing);
+          // Also save to localStorage for next time
           lsSave(code, date, {
             rowNumber: es.existing.rowNumber,
             hmr:       es.existing.hmr,
@@ -847,9 +883,11 @@ function loadAsset(code){
             prevHmr:   es.prevHmr
           });
         } else if(!lsEntry){
+          // No entry anywhere
           setEditMode(false);setProgress(2);
         }
       } else if(!lsEntry){
+        // Web App not configured/failed and no localStorage — fresh entry
         setEditMode(false);setProgress(2);
       }
     })
@@ -939,6 +977,7 @@ function onDateChange(){
   G('fPrevHmr').value='Checking...';
   var date=G('fDate').value;
 
+  // Check localStorage first
   var lsEntry=lsGetEntry(code,date);
   var lsPrev=lsGetPrevHmr(code);
 
@@ -948,6 +987,7 @@ function onDateChange(){
     return;
   }
 
+  // Fall back to Web App
   fetchEntryStatus(code,date)
     .then(function(es){
       if(es&&es.ok){
@@ -970,9 +1010,6 @@ function onDateChange(){
 
 // ================================================================
 //  SUBMIT
-//  *** FIX #1: placeholder changed to 'YOUR_WEBAPP_URL_HERE'      ***
-//  *** FIX #2: Content-Type changed to text/plain to avoid CORS   ***
-//              preflight with mode:no-cors. Body stays JSON text.  ***
 // ================================================================
 function doSubmit(){
   var code=G('fCode').value.trim(),desc=G('fDesc').value.trim();
@@ -1011,7 +1048,8 @@ function doSubmit(){
     remarks:remarks,timestamp:new Date().toISOString()
   };
 
-  // Save to localStorage immediately
+  // Save to localStorage immediately — this prevents duplicates
+  // on this device regardless of network
   var lsData={
     rowNumber:editRowNum,hmr:hmrNum,brkd:brkdNum,fuel:fuelNum,
     remarks:remarks,brkdReason:brsEl?brsEl.value:'',
@@ -1019,43 +1057,17 @@ function doSubmit(){
   };
   lsSave(code,date,lsData);
 
-  // ▼▼▼ BUG FIX #1: placeholder is now 'YOUR_WEBAPP_URL_HERE'
-  //     so the real URL above will ALWAYS reach the fetch() call ▼▼▼
-  if(!WEBAPP_URL || WEBAPP_URL === 'YOUR_WEBAPP_URL_HERE'){
-    // Offline / no Web App configured — localStorage only
-    showSuccess(payload);
-    return;
+  if(!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1){
+    // No valid Web App URL — localStorage only mode (demo)
+    showSuccess(payload);return;
   }
 
-  var btn=G('submitBtn');
-  btn.disabled=true;
-  btn.textContent='Saving...';
+  var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
 
-  // ▼▼▼ BUG FIX #2: Content-Type changed from 'application/json'
-  //     to 'text/plain;charset=utf-8'
-  //     'application/json' with mode:no-cors triggers a CORS preflight
-  //     (OPTIONS) which Google Apps Script does NOT handle — the POST
-  //     was silently dropped. 'text/plain' is a "simple" content type
-  //     that skips preflight. doPost still parses e.postData.contents
-  //     as JSON — no server-side change needed. ▼▼▼
-  fetch(WEBAPP_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type': 'text/plain;charset=utf-8'},
-    body: JSON.stringify(payload)
-  })
-  .then(function(){
-    showSuccess(payload);
-  })
-  .catch(function(){
-    // no-cors always resolves — a catch here means network is down
-    // Data already saved to localStorage, so show success anyway
-    showSuccess(payload);
-  })
-  .finally(function(){
-    btn.disabled=false;
-    btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';
-  });
+  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(){showSuccess(payload);})
+    .catch(function(){showSuccess(payload);}) // no-cors always fires catch
+    .finally(function(){btn.disabled=false;btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';});
 }
 
 function showSuccess(p){
@@ -1091,5 +1103,149 @@ document.addEventListener('DOMContentLoaded',function(){
   loadAsset(readQR());
 });
 </script>
+<!-- ═══ PWA — Service Worker Registration ═══════════════════ -->
+<script>
+(function(){
+  // ── Register Service Worker ──────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .then(function(reg) {
+          console.log('[PWA] Service Worker registered. Scope:', reg.scope);
+
+          // Listen for SW updates — notify user to refresh
+          reg.addEventListener('updatefound', function() {
+            var newWorker = reg.installing;
+            newWorker.addEventListener('statechange', function() {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showPWAToast('App updated! Pull down to refresh for latest version.', 6000);
+              }
+            });
+          });
+        })
+        .catch(function(err) {
+          console.log('[PWA] Service Worker registration failed:', err);
+        });
+
+      // Listen for messages from SW (e.g., background sync)
+      navigator.serviceWorker.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'SYNC_PENDING') {
+          console.log('[PWA] Background sync triggered by SW');
+        }
+      });
+    });
+  }
+
+  // ── Install Prompt (Add to Home Screen banner) ───────────
+  var deferredPrompt = null;
+  var installBanner  = null;
+
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Show a subtle install banner after 4 seconds if not already installed
+    setTimeout(function() {
+      if (deferredPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
+        showInstallBanner();
+      }
+    }, 4000);
+  });
+
+  window.addEventListener('appinstalled', function() {
+    deferredPrompt = null;
+    if (installBanner) installBanner.remove();
+    showPWAToast('Asset installed! Open from your home screen.', 4000);
+    console.log('[PWA] App installed successfully.');
+  });
+
+  function showInstallBanner() {
+    if (document.getElementById('pwa-install-banner')) return;
+
+    installBanner = document.createElement('div');
+    installBanner.id = 'pwa-install-banner';
+    installBanner.style.cssText = [
+      'position:fixed', 'bottom:80px', 'left:14px', 'right:14px', 'z-index:9999',
+      'background:linear-gradient(135deg,#1e2738,#242f42)',
+      'border:1px solid #354a68', 'border-left:3px solid #e8001d',
+      'border-radius:12px', 'padding:14px 16px',
+      'display:flex', 'align-items:center', 'justify-content:space-between', 'gap:12px',
+      'box-shadow:0 8px 32px rgba(0,0,0,.5)',
+      'animation:slideUpBanner .4s cubic-bezier(.175,.885,.32,1.275) both',
+      'font-family:\'Inter\',sans-serif'
+    ].join(';');
+
+    installBanner.innerHTML = [
+      '<style>',
+      '@keyframes slideUpBanner{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}',
+      '</style>',
+      '<div style="flex:1">',
+        '<div style="font-size:12px;font-weight:700;color:#f1f5ff;letter-spacing:.3px;margin-bottom:3px;">',
+          '📲  Install Asset App',
+        '</div>',
+        '<div style="font-size:10px;color:#7B96BC;letter-spacing:.2px;line-height:1.4;">',
+          'Add to home screen for offline access & faster loading',
+        '</div>',
+      '</div>',
+      '<div style="display:flex;gap:8px;flex-shrink:0;">',
+        '<button id="pwa-install-btn" style="background:#e8001d;border:none;border-radius:8px;',
+          'padding:8px 14px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;',
+          'letter-spacing:.5px;text-transform:uppercase;">Install</button>',
+        '<button id="pwa-dismiss-btn" style="background:transparent;border:1px solid #2a3a52;',
+          'border-radius:8px;padding:8px 12px;font-size:11px;color:#4a5e7a;cursor:pointer;">',
+          'Later</button>',
+      '</div>',
+    ].join('');
+
+    document.body.appendChild(installBanner);
+
+    document.getElementById('pwa-install-btn').addEventListener('click', function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(result) {
+          console.log('[PWA] Install choice:', result.outcome);
+          deferredPrompt = null;
+        });
+      }
+      if (installBanner) installBanner.remove();
+    });
+
+    document.getElementById('pwa-dismiss-btn').addEventListener('click', function() {
+      if (installBanner) installBanner.remove();
+    });
+  }
+
+  // ── Offline/Online status toast ──────────────────────────
+  window.addEventListener('online', function() {
+    showPWAToast('Back online \u2014 data will sync now.', 3000);
+  });
+  window.addEventListener('offline', function() {
+    showPWAToast('You are offline. Asset data loaded from device cache.', 5000);
+  });
+
+  function showPWAToast(msg, duration) {
+    var t = document.createElement('div');
+    t.style.cssText = [
+      'position:fixed', 'top:70px', 'left:50%',
+      'transform:translateX(-50%) translateY(-20px)',
+      'background:#1e2738', 'border:1px solid #354a68',
+      'border-radius:10px', 'padding:9px 18px',
+      'font-family:\'JetBrains Mono\',monospace', 'font-size:10px',
+      'color:#22c55e', 'letter-spacing:.3px',
+      'box-shadow:0 6px 20px rgba(0,0,0,.5)', 'z-index:9998',
+      'white-space:nowrap', 'opacity:0',
+      'transition:all .35s cubic-bezier(.175,.885,.32,1.275)'
+    ].join(';');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; }, 50);
+    setTimeout(function(){
+      t.style.opacity='0';
+      setTimeout(function(){ if(t.parentNode) t.remove(); }, 400);
+    }, duration || 3000);
+  }
+})();
+</script>
+<!-- ═══════════════════════════════════════════════════════════ -->
 </body>
 </html>

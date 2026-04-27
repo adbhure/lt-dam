@@ -155,7 +155,7 @@ body::before{
 .a-code{font-size:28px;font-weight:800;letter-spacing:1px;color:var(--blue);line-height:1;min-height:34px;display:flex;align-items:center;}
 .a-code.empty{color:var(--txt4);font-size:16px;font-weight:400;font-family:var(--mono);}
 .a-desc{font-family:var(--mono);font-size:10px;color:var(--green);margin-top:4px;display:flex;align-items:center;gap:4px;}
-.a-desc::before{content:"\\25B6";font-size:7px;}
+.a-desc::before{content:"\25B6";font-size:7px;}
 .a-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
 .status-pill{
   display:flex;align-items:center;gap:5px;border-radius:20px;padding:4px 10px;
@@ -267,6 +267,9 @@ select.fi option{background:#fff;color:var(--txt);}
 textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 .err-msg{font-family:var(--mono);font-size:9px;color:var(--red);margin-top:4px;display:none;letter-spacing:.3px;}
 .err-msg.show{display:block;}
+.warn-msg{font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:6px;display:none;letter-spacing:.3px;padding:7px 10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-left:3px solid var(--amber);border-radius:6px;line-height:1.5;}
+.warn-msg.show{display:block;}
+[data-theme="dark"] .warn-msg{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);}
 
 /* HMR CALC PANEL */
 .hmr-panel{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rad);overflow:hidden;margin-top:12px;}
@@ -413,6 +416,148 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 .scan-torch{display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:20px;cursor:pointer;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.8);letter-spacing:.8px;text-transform:uppercase;}
 .scan-torch.on{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.5);color:#f59e0b;}
 .scan-status-txt{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.5px;text-align:center;}
+
+/* ═══ THEME SYSTEM ═══════════════════════════════════════════ */
+/* Pink Premium Theme */
+[data-theme="pink"]{
+  --bg:      #FDF5F7;
+  --bg2:     #FFFFFF;
+  --bg3:     #FAEDF1;
+  --card:    #FFFFFF;
+  --card2:   #FDF0F3;
+  --border:  #F0C4D0;
+  --border2: #E8A0B4;
+  --lt-red:  #C2185B;
+  --lt-dark: #880E4F;
+  --blue:    #AD1457;
+  --blue2:   #880E4F;
+  --green:   #2E7D32;
+  --amber:   #E65100;
+  --red:     #C62828;
+  --purple:  #6A1B9A;
+  --txt:     #2D0A18;
+  --txt2:    #6D2B45;
+  --txt3:    #AD6E85;
+  --txt4:    #D4A0B0;
+}
+/* Night Dark Theme */
+[data-theme="dark"]{
+  --bg:      #0f1117;
+  --bg2:     #161b24;
+  --bg3:     #1c2433;
+  --card:    #1e2738;
+  --card2:   #242f42;
+  --border:  #2a3a52;
+  --border2: #354a68;
+  --lt-red:  #e8001d;
+  --lt-dark: #b50018;
+  --blue:    #3b82f6;
+  --blue2:   #2563eb;
+  --green:   #22c55e;
+  --amber:   #f59e0b;
+  --red:     #ef4444;
+  --purple:  #a855f7;
+  --txt:     #f1f5ff;
+  --txt2:    #8899bb;
+  --txt3:    #4a5e7a;
+  --txt4:    #2d3d55;
+}
+[data-theme="dark"] body{ background:var(--bg); }
+[data-theme="dark"] .topbar{ background:rgba(14,17,23,.95); border-bottom-color:var(--border); box-shadow:none; }
+[data-theme="dark"] .topbar{ border-bottom:1px solid var(--border); border-bottom-width:1px; }
+[data-theme="dark"] input[type=date].fi{ color-scheme:dark; }
+[data-theme="dark"] #loadingOverlay{ background:rgba(15,17,23,.85); }
+[data-theme="dark"] #successScreen{ background:var(--bg); }
+[data-theme="dark"] .section{ box-shadow:none; }
+[data-theme="dark"] .asset-hero{ box-shadow:none; }
+[data-theme="dark"] .hmr-box{ box-shadow:none; }
+[data-theme="dark"] .h-block{ box-shadow:none; }
+[data-theme="dark"] .fi.ro{ background:rgba(59,130,246,.07); }
+[data-theme="dark"] .fi.autofill{ background:rgba(34,197,94,.07); }
+[data-theme="dark"] .r-btn{ background:var(--bg2); }
+[data-theme="dark"] .r-btn:hover{ background:var(--bg3); }
+
+/* Font scale system */
+[data-fsize="small"]  { font-size: 13px; }
+[data-fsize="medium"] { font-size: 16px; }
+[data-fsize="large"]  { font-size: 19px; }
+[data-fsize="small"]  .h-input { font-size:28px; }
+[data-fsize="large"]  .h-input { font-size:44px; }
+[data-fsize="small"]  .a-code  { font-size:22px; }
+[data-fsize="large"]  .a-code  { font-size:34px; }
+
+/* ── SETTINGS PANEL ───────────────────────────────────── */
+#settingsBtn{
+  position:fixed; bottom:24px; right:16px; z-index:400;
+  width:46px; height:46px; border-radius:50%;
+  background:var(--lt-red); border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 16px rgba(232,0,29,.4);
+  font-size:20px; transition:transform .2s, box-shadow .2s;
+}
+#settingsBtn:hover{ transform:scale(1.1) rotate(30deg); }
+
+#settingsPanel{
+  display:none; position:fixed; bottom:82px; right:16px; z-index:401;
+  background:var(--card); border:1.5px solid var(--border2);
+  border-radius:20px; padding:20px 18px;
+  box-shadow:0 8px 32px rgba(0,0,0,.15);
+  min-width:220px;
+  animation:popIn .25s cubic-bezier(.175,.885,.32,1.275) both;
+}
+#settingsPanel.open{ display:block; }
+@keyframes popIn{from{transform:scale(.85) translateY(12px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+.sp-title{
+  font-family:var(--mono); font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--txt3); margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.sp-title::before{ content:''; flex:1; height:1px; background:var(--border); }
+.sp-section{ margin-bottom:16px; }
+.sp-section:last-child{ margin-bottom:0; }
+.sp-lbl{
+  font-family:var(--mono); font-size:8px; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--txt3); margin-bottom:8px;
+}
+
+/* Theme buttons */
+.theme-row{ display:flex; gap:8px; }
+.theme-btn{
+  flex:1; height:36px; border-radius:10px; border:2px solid transparent;
+  cursor:pointer; position:relative; transition:all .15s;
+  overflow:hidden;
+}
+.theme-btn.active{ border-color:var(--lt-red); transform:scale(1.05); }
+.theme-btn[data-t="light"]{ background:linear-gradient(135deg,#F4F7FB 50%,#FFFFFF 50%); border-color:var(--border2); }
+.theme-btn[data-t="pink"] { background:linear-gradient(135deg,#FDF5F7 50%,#F0C4D0 50%); }
+.theme-btn[data-t="dark"] { background:linear-gradient(135deg,#0f1117 50%,#1e2738 50%); }
+.theme-btn span{
+  position:absolute; bottom:3px; left:50%; transform:translateX(-50%);
+  font-family:var(--mono); font-size:7px; letter-spacing:.5px;
+  text-transform:uppercase; white-space:nowrap;
+}
+.theme-btn[data-t="light"] span{ color:#2D4A6B; }
+.theme-btn[data-t="pink"]  span{ color:#C2185B; }
+.theme-btn[data-t="dark"]  span{ color:#8899bb; }
+
+/* Font size buttons */
+.fsize-row{ display:flex; gap:6px; }
+.fsize-btn{
+  flex:1; padding:8px 4px; border-radius:8px; cursor:pointer;
+  border:1.5px solid var(--border2); background:var(--bg3);
+  font-family:var(--mono); font-weight:700; color:var(--txt3);
+  transition:all .15s; text-align:center;
+}
+.fsize-btn.active{ border-color:var(--lt-red); background:rgba(232,0,29,.06); color:var(--lt-red); }
+.fsize-btn[data-fs="small"]  { font-size:11px; }
+.fsize-btn[data-fs="medium"] { font-size:13px; }
+.fsize-btn[data-fs="large"]  { font-size:16px; }
+
+/* Settings close overlay */
+#settingsOverlay{ display:none; position:fixed; inset:0; z-index:399; }
+#settingsOverlay.open{ display:block; }
+
 </style>
 </head>
 <body>
@@ -578,6 +723,11 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
         <div class="h-unit">hours</div>
       </div>
     </div>
+    <!-- HMR RANGE WARNING — shows live when Today HMR - Prev HMR > 24 -->
+    <div class="warn-msg" id="hmrWarn">
+      &#9888; Running Hours exceed 24 hrs &mdash; please recheck the meter reading.<br>
+      <span style="font-size:8px;opacity:.8;">Max allowed: Prev HMR + 24 hrs. Contact supervisor if meter was replaced.</span>
+    </div>
     <div class="hmr-panel">
       <div class="hmr-ptitle">
         <span>Live Calculation</span>
@@ -659,6 +809,32 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 </div>
 
 </div><!-- /page -->
+
+<!-- ═══ SETTINGS: THEME & FONT SIZE ═══════════════════════════ -->
+<div id="settingsOverlay" onclick="toggleSettings()"></div>
+<button id="settingsBtn" onclick="toggleSettings()" aria-label="Settings">&#9881;</button>
+<div id="settingsPanel">
+  <div class="sp-title">Display Settings</div>
+
+  <div class="sp-section">
+    <div class="sp-lbl">Theme</div>
+    <div class="theme-row">
+      <div class="theme-btn" data-t="light" onclick="setTheme('light')"><span>Light</span></div>
+      <div class="theme-btn" data-t="pink"  onclick="setTheme('pink')"><span>Rose</span></div>
+      <div class="theme-btn" data-t="dark"  onclick="setTheme('dark')"><span>Night</span></div>
+    </div>
+  </div>
+
+  <div class="sp-section">
+    <div class="sp-lbl">Font Size</div>
+    <div class="fsize-row">
+      <div class="fsize-btn" data-fs="small"  onclick="setFontSize('small')">A</div>
+      <div class="fsize-btn" data-fs="medium" onclick="setFontSize('medium')">A</div>
+      <div class="fsize-btn" data-fs="large"  onclick="setFontSize('large')">A</div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════════ -->
 
 <script>
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzR78JBe3a9iagEFxMMbZEQReljruY_f_JsQQ03oXHsXeMP9OtRMjzIPaI8lEcDwnxLNg/exec';
@@ -764,6 +940,19 @@ function recalcHours(){
   if(isNaN(todayVal)){G('calcRun').textContent='—';G('calcRun').className='hmr-box-val hv-empty';G('mRun').textContent='—';G('mIdle').textContent='—';G('mUtil').textContent='—';G('calcStatus').textContent='—';G('calcStatus').style.color='var(--txt4)';G('utilFill').style.width='0';return;}
   var runHrs,hasCalc;
   if(prevHmr!==null){runHrs=Math.max(0,todayVal-prevHmr);hasCalc=true;}else{runHrs=0;hasCalc=false;}
+
+  // ── LIVE WARNING: running hours > 24 is physically impossible ──
+  var hmrWarnEl = G('hmrWarn');
+  if(hasCalc && runHrs > 24){
+    hmrWarnEl.classList.add('show');
+    // Highlight the Today HMR input block in red
+    G('fHmr').closest('.h-block').style.borderColor = 'var(--red)';
+    G('fHmr').closest('.h-block').style.boxShadow  = '0 0 0 3px rgba(220,38,38,.15)';
+  } else {
+    hmrWarnEl.classList.remove('show');
+    G('fHmr').closest('.h-block').style.borderColor = '';
+    G('fHmr').closest('.h-block').style.boxShadow  = '';
+  }
   var idleHrs=Math.max(0,stdHours-runHrs-brkdVal),util=stdHours>0?Math.min(100,(runHrs/stdHours*100)):0;
   G('calcRun').textContent=hasCalc?runHrs.toFixed(1):'?';G('calcRun').className='hmr-box-val '+(hasCalc?'hv-run':'hv-empty');
   G('mRun').textContent=hasCalc?runHrs.toFixed(1):'—';G('mIdle').textContent=hasCalc?idleHrs.toFixed(1):'—';G('mUtil').textContent=hasCalc?util.toFixed(1)+'%':'—';
@@ -797,6 +986,24 @@ function doSubmit(){
   G('eFuel').classList.remove('show');
   var hmrNum=parseFloat(hmrStr),brkdNum=parseFloat(brkdStr)||0,fuelNum=parseFloat(fuelStr)||0;
   if(prevHmr!==null&&hmrNum<prevHmr){alert("ERROR: Today's HMR ("+hmrNum+") cannot be less than Previous HMR ("+prevHmr+"). HMR is a cumulative odometer.");return;}
+
+  // ── HARD BLOCK: running hours > 24 hrs is impossible ──────────
+  var runHrsCheck = prevHmr !== null ? (hmrNum - prevHmr) : 0;
+  if(prevHmr !== null && runHrsCheck > 24){
+    G('hmrWarn').classList.add('show');
+    G('fHmr').focus();
+    alert(
+      "ENTRY BLOCKED\n\n" +
+      "Today HMR : " + hmrNum + "\n" +
+      "Prev HMR  : " + prevHmr + "\n" +
+      "Difference: " + runHrsCheck.toFixed(1) + " hrs\n\n" +
+      "Running hours cannot exceed 24 hrs in one day.\n" +
+      "Please recheck the hour meter reading.\n\n" +
+      "If the meter was physically replaced, contact your supervisor."
+    );
+    return;
+  }
+  G('hmrWarn').classList.remove('show');
   var brsEl=document.querySelector('input[name="brs"]:checked');
   if(brkdNum>0&&!brsEl){G('eBrkdR').classList.add('show');return;}
   G('eBrkdR').classList.remove('show');
@@ -820,7 +1027,7 @@ function resetForm(){
   document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});
   document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
   G('bLocked').style.display='block';G('bGrid').style.display='none';
-  G('eFuel').classList.remove('show');G('eBrkdR').classList.remove('show');
+  G('eFuel').classList.remove('show');G('eBrkdR').classList.remove('show');G('hmrWarn').classList.remove('show');
   setEditMode(false);prevHmr=null;recalcHours();
   setProgress(G('fCode').value?2:1);
 }
@@ -896,11 +1103,12 @@ if('serviceWorker'in navigator){window.addEventListener('load',function(){naviga
 // ── iOS INSTALL GUIDE ─────────────────────────────────────────
 (function(){
   var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent),standalone=window.navigator.standalone===true,isSafari=/safari/i.test(navigator.userAgent)&&!/crios|fxios/i.test(navigator.userAgent);
-  if(!isIos||standalone||!isSafari||localStorage.getItem('ios_dismissed'))return;
+  if(!isIos||standalone||!isSafari||localStorage.getItem('ios_d'))return;
   setTimeout(function(){
     var d=document.createElement('div');
+    d.id='iosBanner';
     d.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#fff;border-top:3px solid #e8001d;padding:16px 16px 28px;box-shadow:0 -4px 24px rgba(0,0,0,.12);font-family:Inter,sans-serif;';
-    d.innerHTML='<button onclick="this.parentNode.remove();localStorage.setItem(\'ios_dismissed\',\'1\')" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#999;font-size:22px;cursor:pointer;">&times;</button>'
+    d.innerHTML='<button onclick="dismissIosBanner()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#999;font-size:22px;cursor:pointer;">&times;</button>'
       +'<div style="font-size:13px;font-weight:700;color:#0F1C2E;margin-bottom:12px;">&#128247; Install AssetOps on iPhone</div>'
       +'<div style="display:flex;flex-direction:column;gap:8px;">'
       +'<div style="background:#F4F7FB;border-radius:8px;padding:9px 12px;border:1px solid #D0DAE8;font-size:12px;color:#0F1C2E;"><b style="color:#e8001d;">1.</b> Tap the Share button &#8679; at the bottom of Safari</div>'
@@ -912,7 +1120,57 @@ if('serviceWorker'in navigator){window.addEventListener('load',function(){naviga
   },3500);
 })();
 
+
+// ── THEME & FONT SIZE CONTROLS ───────────────────────────────
+var THEMES = ['light','pink','dark'];
+var FSIZES = ['small','medium','large'];
+
+function setTheme(t){
+  if(!THEMES.includes(t)) t = 'light';
+  document.documentElement.setAttribute('data-theme', t === 'light' ? '' : t);
+  localStorage.setItem('lt_theme', t);
+  // Update active btn
+  document.querySelectorAll('.theme-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-t') === t);
+  });
+  // Fix topbar border for light vs dark
+  var topbar = document.querySelector('.topbar');
+  if(topbar){
+    if(t === 'dark'){
+      topbar.style.borderBottom = '1px solid var(--border)';
+      topbar.style.boxShadow = 'none';
+    } else {
+      topbar.style.borderBottom = '2px solid var(--lt-red)';
+      topbar.style.boxShadow = '0 2px 12px rgba(0,0,0,.08)';
+    }
+  }
+}
+
+function setFontSize(fs){
+  if(!FSIZES.includes(fs)) fs = 'medium';
+  document.documentElement.setAttribute('data-fsize', fs);
+  localStorage.setItem('lt_fsize', fs);
+  document.querySelectorAll('.fsize-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-fs') === fs);
+  });
+}
+
+function toggleSettings(){
+  var p = document.getElementById('settingsPanel');
+  var o = document.getElementById('settingsOverlay');
+  var open = p.classList.toggle('open');
+  o.classList.toggle('open', open);
+}
+
+function initDisplay(){
+  var savedTheme = localStorage.getItem('lt_theme') || 'light';
+  var savedSize  = localStorage.getItem('lt_fsize')  || 'medium';
+  setTheme(savedTheme);
+  setFontSize(savedSize);
+}
+
 document.addEventListener('DOMContentLoaded',function(){
+  initDisplay();
   setInterval(tick,1000);tick();
   G('fDate').value=todayISO();
   var sid='RPT-'+Date.now().toString(36).toUpperCase().slice(-6);

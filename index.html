@@ -417,6 +417,35 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 .scan-torch.on{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.5);color:#f59e0b;}
 .scan-status-txt{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.5px;text-align:center;}
 
+/* ═══ GAP / HOLIDAY BANNER ═══════════════════════════════════ */
+.gap-banner{
+  display:none; margin:12px 14px 0;
+  background:linear-gradient(135deg,rgba(29,111,216,.09),rgba(29,111,216,.04));
+  border:1px solid rgba(29,111,216,.3); border-left:3px solid var(--blue);
+  border-radius:var(--rad); padding:12px 14px; gap:10px; align-items:flex-start;
+}
+.gap-banner.show{display:flex;}
+.gb-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.gb-body{flex:1;}
+.gb-title{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;}
+.gb-info{font-family:var(--mono);font-size:9.5px;color:var(--txt2);line-height:1.8;}
+.gb-std-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.gb-std-lbl{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:.5px;white-space:nowrap;}
+.gb-std-input{
+  width:64px;background:var(--bg2);border:1.5px solid var(--blue);
+  border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:13px;
+  font-weight:700;color:var(--blue);outline:none;text-align:center;
+}
+.gb-std-btn{
+  padding:6px 14px;background:var(--blue);border:none;border-radius:8px;
+  font-family:var(--mono);font-size:9px;font-weight:700;color:#fff;
+  letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:opacity .15s;
+}
+.gb-std-btn:hover{opacity:.85;}
+[data-theme="dark"] .gap-banner{background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(59,130,246,.04));border-color:rgba(59,130,246,.3);border-left-color:#3b82f6;}
+[data-theme="dark"] .gb-std-input{border-color:#3b82f6;color:#3b82f6;}
+[data-theme="dark"] .gb-std-btn{background:#3b82f6;}
+
 /* ═══ THEME SYSTEM ═══════════════════════════════════════════ */
 /* Pink Premium Theme */
 [data-theme="pink"]{
@@ -636,6 +665,20 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
   </div>
 </div>
 
+<!-- GAP / HOLIDAY BANNER -->
+<div class="gap-banner" id="gapBanner">
+  <div class="gb-icon">&#x1F4C5;</div>
+  <div class="gb-body">
+    <div class="gb-title" id="gapTitle">Gap Detected</div>
+    <div class="gb-info" id="gapInfo">Previous entry was on a different date.</div>
+    <div class="gb-std-row">
+      <span class="gb-std-lbl">Total Std Hrs for this period:</span>
+      <input type="number" class="gb-std-input" id="fStdHours" min="1" max="240" oninput="onStdHoursChange()">
+      <button class="gb-std-btn" onclick="applyStdHours()">Apply</button>
+    </div>
+  </div>
+</div>
+
 <!-- ASSET HERO -->
 <div class="asset-hero">
   <div class="qr-pill" id="qrPill" onclick="openScanner()" role="button" tabindex="0" aria-label="Open QR Scanner">
@@ -723,10 +766,10 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
         <div class="h-unit">hours</div>
       </div>
     </div>
-    <!-- HMR RANGE WARNING — shows live when Today HMR - Prev HMR > 24 -->
+    <!-- HMR RANGE WARNING — shows live when Running Hrs exceed Std Hrs -->
     <div class="warn-msg" id="hmrWarn">
-      &#9888; Running Hours exceed 24 hrs &mdash; please recheck the meter reading.<br>
-      <span style="font-size:8px;opacity:.8;">Max allowed: Prev HMR + 24 hrs. Contact supervisor if meter was replaced.</span>
+      &#9888; Running Hours exceed the allowed limit (<span id="warnStdVal">24</span> hrs) &mdash; please recheck the meter reading.<br>
+      <span style="font-size:8px;opacity:.8;">If there was a multi-day gap, adjust Std Hours in the blue banner above. If meter was replaced, contact supervisor.</span>
     </div>
     <div class="hmr-panel">
       <div class="hmr-ptitle">
@@ -860,7 +903,7 @@ var LOCAL_DB = {
   '25961560':{d:'500 KVA DG',t:'Gen 500K',c:'Power-Heavy',s:24},
   '25980556':{d:'750 KVA DG SET',t:'Gen 750K',c:'Power-Heavy',s:24}
 };
-var LIVE_DB={},prevHmr=null,stdHours=24,isEditMode=false,editRowNum=null;
+var LIVE_DB={},prevHmr=null,prevDate=null,stdHours=24,baseStdHours=24,gapDays=1,isEditMode=false,editRowNum=null;
 function G(id){return document.getElementById(id);}
 var MO=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function pad2(n){return String(n).padStart(2,'0');}
@@ -897,9 +940,97 @@ function fetchEntryStatus(code,date){
   var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},10000);
   return fetch(url,{signal:ctrl.signal}).then(function(r){clearTimeout(t);return r.json();}).catch(function(){clearTimeout(t);return null;});
 }
-function applyPrevHmr(val){
-  if(val!==null&&val!==undefined&&!isNaN(parseFloat(val))){prevHmr=parseFloat(val);G('fPrevHmr').value=prevHmr;G('fPrevHmr').className='fi prevhmr';G('calcPrev').textContent=prevHmr;G('calcPrev').className='hmr-box-val hv-prev';}
-  else{prevHmr=null;G('fPrevHmr').value='';G('fPrevHmr').placeholder='No previous entry (first scan ever)';G('fPrevHmr').className='fi prevhmr';G('calcPrev').textContent='—';G('calcPrev').className='hmr-box-val hv-empty';}
+function applyPrevHmr(val, pd){
+  prevDate = pd || null;
+  if(val!==null&&val!==undefined&&!isNaN(parseFloat(val))){
+    prevHmr=parseFloat(val);
+    G('fPrevHmr').value=prevHmr;
+    G('fPrevHmr').className='fi prevhmr';
+    G('calcPrev').textContent=prevHmr;
+    G('calcPrev').className='hmr-box-val hv-prev';
+  } else {
+    prevHmr=null;
+    G('fPrevHmr').value='';
+    G('fPrevHmr').placeholder='No previous entry (first scan ever)';
+    G('fPrevHmr').className='fi prevhmr';
+    G('calcPrev').textContent='—';
+    G('calcPrev').className='hmr-box-val hv-empty';
+  }
+  // Run gap detection whenever prev HMR is set
+  detectGap();
+}
+
+// ── GAP DETECTION ─────────────────────────────────────────────
+// Called after prevDate and today's date are both known.
+// Calculates how many days since last entry and adjusts stdHours.
+function detectGap(){
+  var todayStr = G('fDate').value || todayISO();
+  var banner   = G('gapBanner');
+
+  // Hide banner if no previous date
+  if(!prevDate || prevDate === todayStr){
+    banner.classList.remove('show');
+    gapDays  = 1;
+    stdHours = baseStdHours;
+    G('stdLabel').textContent = 'Std: ' + baseStdHours + ' hrs/day';
+    recalcHours();
+    return;
+  }
+
+  // Calculate gap in days
+  var d1    = new Date(prevDate + 'T00:00:00');
+  var d2    = new Date(todayStr + 'T00:00:00');
+  var diffMs = d2 - d1;
+  var days   = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if(days <= 1){
+    // Normal — consecutive days
+    banner.classList.remove('show');
+    gapDays  = 1;
+    stdHours = baseStdHours;
+    G('stdLabel').textContent = 'Std: ' + baseStdHours + ' hrs/day';
+    recalcHours();
+    return;
+  }
+
+  // Gap found — days skipped (holiday/Sunday/multiple days)
+  gapDays  = days;
+  stdHours = baseStdHours * days;   // auto = base × number of days
+
+  // Format display dates
+  var fmt = function(s){ var p=s.split('-'); return p[2]+'-'+p[1]+'-'+p[0]; };
+  var dayWord = days === 2 ? '1 day skipped' : (days-1) + ' days skipped';
+
+  G('gapTitle').textContent = days + '-Day Gap Detected';
+  G('gapInfo').innerHTML =
+    'Last entry: <strong>' + fmt(prevDate) + '</strong> &nbsp;&rarr;&nbsp; Today: <strong>' + fmt(todayStr) + '</strong><br>' +
+    '<span style="color:var(--amber)">&#9888; ' + dayWord + ' (holiday / Sunday / no entry)</span><br>' +
+    'Standard hours auto-set to <strong>' + stdHours + ' hrs</strong> (' + days + ' days &times; ' + baseStdHours + ' hrs/day).<br>' +
+    'Change below if some days this machine was <em>not</em> available.';
+
+  G('fStdHours').value = stdHours;
+  G('stdLabel').textContent = 'Std: ' + stdHours + ' hrs (' + days + ' days)';
+  banner.classList.add('show');
+  recalcHours();
+}
+
+function onStdHoursChange(){
+  var v = parseInt(G('fStdHours').value) || 0;
+  if(v > 0){
+    stdHours = v;
+    recalcHours();
+  }
+}
+
+function applyStdHours(){
+  var v = parseInt(G('fStdHours').value) || 0;
+  if(v < 1){ alert('Please enter a valid number of hours (minimum 1).'); return; }
+  stdHours = v;
+  G('stdLabel').textContent = 'Std: ' + stdHours + ' hrs (' + gapDays + ' days)';
+  recalcHours();
+  // Visual feedback
+  var btn = document.querySelector('.gb-std-btn');
+  if(btn){ btn.textContent = 'Applied ✓'; btn.style.background = 'var(--green)'; setTimeout(function(){ btn.textContent='Apply'; btn.style.background=''; },2000); }
 }
 function prefillExisting(ex){
   setEditMode(true,ex.rowNumber);
@@ -916,15 +1047,21 @@ function loadAsset(code){
   G('aCode').textContent=code;G('fCode').value=code;
   var date=G('fDate').value||todayISO();
   var localA=LOCAL_DB[code];
-  if(localA){renderAsset(code,localA);stdHours=localA.s||24;}
+  if(localA){renderAsset(code,localA);stdHours=localA.s||24;baseStdHours=localA.s||24;}
   var lsEntry=lsGetEntry(code,date);var lsPrev=lsGetPrevHmr(code);
-  if(lsPrev!==null&&(lsEntry===null||lsEntry.date!==date))applyPrevHmr(lsPrev);
-  if(lsEntry){applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev);prefillExisting({rowNumber:lsEntry.rowNumber||null,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});hideLoading();}
+  if(lsPrev!==null&&(lsEntry===null||lsEntry.date!==date))applyPrevHmr(lsPrev, null);
+  if(lsEntry){applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev, lsEntry.prevDate||null);prefillExisting({rowNumber:lsEntry.rowNumber||null,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});hideLoading();}
   Promise.all([fetchAssetDB(),fetchEntryStatus(code,date)]).then(function(results){
     hideLoading();var es=results[1];
-    var a=LIVE_DB[code]||LOCAL_DB[code]||null;renderAsset(code,a);if(a)stdHours=a.s||24;
-    if(es&&es.ok){applyPrevHmr(es.prevHmr);if(es.existing){prefillExisting(es.existing);lsSave(code,date,{rowNumber:es.existing.rowNumber,hmr:es.existing.hmr,brkd:es.existing.brkd,fuel:es.existing.fuel,remarks:es.existing.remarks,brkdReason:es.existing.brkdReason,prevHmr:es.prevHmr});}else if(!lsEntry){setEditMode(false);setProgress(2);}}
-    else if(!lsEntry){setEditMode(false);setProgress(2);}
+    var a=LIVE_DB[code]||LOCAL_DB[code]||null;renderAsset(code,a);
+    if(a){stdHours=a.s||24;baseStdHours=a.s||24;}
+    if(es&&es.ok){
+      applyPrevHmr(es.prevHmr, es.prevDate||null);
+      if(es.existing){
+        prefillExisting(es.existing);
+        lsSave(code,date,{rowNumber:es.existing.rowNumber,hmr:es.existing.hmr,brkd:es.existing.brkd,fuel:es.existing.fuel,remarks:es.existing.remarks,brkdReason:es.existing.brkdReason,prevHmr:es.prevHmr,prevDate:es.prevDate||null});
+      }else if(!lsEntry){setEditMode(false);setProgress(2);}
+    }else if(!lsEntry){setEditMode(false);setProgress(2);}
   }).catch(function(){hideLoading();var a=LOCAL_DB[code]||null;renderAsset(code,a);if(!lsEntry){setEditMode(false);setProgress(2);}});
 }
 function renderAsset(code,a){
@@ -941,11 +1078,11 @@ function recalcHours(){
   var runHrs,hasCalc;
   if(prevHmr!==null){runHrs=Math.max(0,todayVal-prevHmr);hasCalc=true;}else{runHrs=0;hasCalc=false;}
 
-  // ── LIVE WARNING: running hours > 24 is physically impossible ──
+  // ── LIVE WARNING: running hours > stdHours ──
   var hmrWarnEl = G('hmrWarn');
-  if(hasCalc && runHrs > 24){
+  var warnSpan  = G('warnStdVal'); if(warnSpan) warnSpan.textContent = stdHours;
+  if(hasCalc && runHrs > stdHours){
     hmrWarnEl.classList.add('show');
-    // Highlight the Today HMR input block in red
     G('fHmr').closest('.h-block').style.borderColor = 'var(--red)';
     G('fHmr').closest('.h-block').style.boxShadow  = '0 0 0 3px rgba(220,38,38,.15)';
   } else {
@@ -973,8 +1110,11 @@ function onDateChange(){
   var lsEntry=lsGetEntry(code,date),lsPrev=lsGetPrevHmr(code);
   if(lsEntry){applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev);prefillExisting({rowNumber:lsEntry.rowNumber,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});return;}
   fetchEntryStatus(code,date).then(function(es){
-    if(es&&es.ok){applyPrevHmr(es.prevHmr);if(es.existing){prefillExisting(es.existing);}else{setEditMode(false);G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});G('bLocked').style.display='block';G('bGrid').style.display='none';recalcHours();setProgress(2);}}
-    else{applyPrevHmr(lsPrev);setEditMode(false);recalcHours();setProgress(2);}
+    if(es&&es.ok){
+      applyPrevHmr(es.prevHmr, es.prevDate||null);
+      if(es.existing){prefillExisting(es.existing);}
+      else{setEditMode(false);G('fHmr').value='';G('fBrkd').value='';G('fFuel').value='';G('fRemarks').value='';document.querySelectorAll('.r-btn').forEach(function(b){b.classList.remove('on');});document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});G('bLocked').style.display='block';G('bGrid').style.display='none';recalcHours();setProgress(2);}
+    }else{applyPrevHmr(lsPrev, null);setEditMode(false);recalcHours();setProgress(2);}
   });
 }
 function doSubmit(){
@@ -987,19 +1127,24 @@ function doSubmit(){
   var hmrNum=parseFloat(hmrStr),brkdNum=parseFloat(brkdStr)||0,fuelNum=parseFloat(fuelStr)||0;
   if(prevHmr!==null&&hmrNum<prevHmr){alert("ERROR: Today's HMR ("+hmrNum+") cannot be less than Previous HMR ("+prevHmr+"). HMR is a cumulative odometer.");return;}
 
-  // ── HARD BLOCK: running hours > 24 hrs is impossible ──────────
+  // ── HARD BLOCK: running hours > stdHours (gap-aware) ──────────
   var runHrsCheck = prevHmr !== null ? (hmrNum - prevHmr) : 0;
-  if(prevHmr !== null && runHrsCheck > 24){
+  var maxAllowed  = stdHours; // already multiplied by gap days
+  if(prevHmr !== null && runHrsCheck > maxAllowed){
     G('hmrWarn').classList.add('show');
     G('fHmr').focus();
+    var gapMsg = gapDays > 1
+      ? 'Gap period: ' + gapDays + ' days \xd7 ' + baseStdHours + ' hrs = ' + maxAllowed + ' hrs max.\n'
+      : '';
     alert(
-      "ENTRY BLOCKED\n\n" +
-      "Today HMR : " + hmrNum + "\n" +
-      "Prev HMR  : " + prevHmr + "\n" +
-      "Difference: " + runHrsCheck.toFixed(1) + " hrs\n\n" +
-      "Running hours cannot exceed 24 hrs in one day.\n" +
-      "Please recheck the hour meter reading.\n\n" +
-      "If the meter was physically replaced, contact your supervisor."
+      'ENTRY BLOCKED\n\n' +
+      'Today HMR  : ' + hmrNum + '\n' +
+      'Prev HMR   : ' + prevHmr + '\n' +
+      'Difference : ' + runHrsCheck.toFixed(1) + ' hrs\n' +
+      'Max Allowed: ' + maxAllowed + ' hrs\n\n' +
+      gapMsg +
+      'Please recheck the hour meter reading.\n' +
+      'If the meter was replaced, contact your supervisor.'
     );
     return;
   }
@@ -1008,7 +1153,7 @@ function doSubmit(){
   if(brkdNum>0&&!brsEl){G('eBrkdR').classList.add('show');return;}
   G('eBrkdR').classList.remove('show');
   var runHrs=prevHmr!==null?Math.max(0,hmrNum-prevHmr):0,idleHrs=Math.max(0,stdHours-runHrs-brkdNum),util=stdHours>0?(runHrs/stdHours*100).toFixed(1):'0';
-  var payload={isEdit:isEditMode,rowNumber:editRowNum,date:date,assetCode:code,description:desc||code,prevHmr:prevHmr!==null?prevHmr:'',todayHmr:hmrNum,runningHrs:runHrs.toFixed(2),breakdownHrs:brkdNum,idleHrs:idleHrs.toFixed(2),stdHours:stdHours,utilization:util,fuel:fuelNum,brkdReason:brsEl?brsEl.value:'',status:brkdNum>0?'BREAKDOWN':'OPERATIONAL',remarks:remarks,timestamp:new Date().toISOString()};
+  var payload={isEdit:isEditMode,rowNumber:editRowNum,date:date,assetCode:code,description:desc||code,prevHmr:prevHmr!==null?prevHmr:'',todayHmr:hmrNum,runningHrs:runHrs.toFixed(2),breakdownHrs:brkdNum,idleHrs:idleHrs.toFixed(2),stdHours:stdHours,gapDays:gapDays,utilization:util,fuel:fuelNum,brkdReason:brsEl?brsEl.value:'',status:brkdNum>0?'BREAKDOWN':'OPERATIONAL',remarks:remarks,timestamp:new Date().toISOString()};
   lsSave(code,date,{rowNumber:editRowNum,hmr:hmrNum,brkd:brkdNum,fuel:fuelNum,remarks:remarks,brkdReason:brsEl?brsEl.value:'',prevHmr:prevHmr!==null?prevHmr:undefined});
   if(!WEBAPP_URL||WEBAPP_URL.indexOf('script.google.com')===-1){showSuccess(payload);return;}
   var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
@@ -1028,6 +1173,8 @@ function resetForm(){
   document.querySelectorAll('input[name="brs"]').forEach(function(r){r.checked=false;});
   G('bLocked').style.display='block';G('bGrid').style.display='none';
   G('eFuel').classList.remove('show');G('eBrkdR').classList.remove('show');G('hmrWarn').classList.remove('show');
+  G('gapBanner').classList.remove('show');
+  prevDate=null; gapDays=1; stdHours=baseStdHours;
   setEditMode(false);prevHmr=null;recalcHours();
   setProgress(G('fCode').value?2:1);
 }
@@ -1098,7 +1245,128 @@ window.addEventListener('popstate',function(){if(scanOpen)closeScanner();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&scanOpen)closeScanner();});
 
 // ── SERVICE WORKER ────────────────────────────────────────────
-if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js',{scope:'./'}).then(function(r){console.log('[SW]',r.scope);}).catch(function(e){console.log('[SW] fail',e);});});}
+// ── SERVICE WORKER ────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .then(function(reg){
+        console.log('[SW] Registered:', reg.scope);
+        // Notify user when a new version of the app is available
+        reg.addEventListener('updatefound', function(){
+          var nw = reg.installing;
+          nw.addEventListener('statechange', function(){
+            if(nw.state === 'installed' && navigator.serviceWorker.controller){
+              showPWAToast('App updated! Refresh to get the latest version.', 6000);
+            }
+          });
+        });
+      })
+      .catch(function(e){ console.log('[SW] Failed:', e); });
+  });
+}
+
+// ── ANDROID INSTALL PROMPT ────────────────────────────────────
+// Chrome on Android fires 'beforeinstallprompt' when the app
+// meets PWA installability criteria (manifest + SW + HTTPS).
+// We capture the event, prevent the default mini-bar,
+// and show our own branded install banner after 4 seconds.
+var _deferredPrompt = null;
+var _installBanner  = null;
+
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();          // stop Chrome's default mini-bar
+  _deferredPrompt = e;         // save it for later
+  console.log('[PWA] Install prompt captured — will show banner in 4s');
+
+  // Only show if not already running as installed PWA
+  setTimeout(function(){
+    if(_deferredPrompt && !window.matchMedia('(display-mode: standalone)').matches){
+      showInstallBanner();
+    }
+  }, 4000);
+});
+
+window.addEventListener('appinstalled', function(){
+  _deferredPrompt = null;
+  if(_installBanner) _installBanner.remove();
+  showPWAToast('AssetOps installed! Open it from your home screen.', 5000);
+  console.log('[PWA] App installed successfully.');
+});
+
+function showInstallBanner(){
+  if(document.getElementById('pwa-install-banner')) return; // already showing
+
+  _installBanner = document.createElement('div');
+  _installBanner.id = 'pwa-install-banner';
+  _installBanner.style.cssText = [
+    'position:fixed','bottom:80px','left:14px','right:14px','z-index:9999',
+    'background:var(--card)',
+    'border:1.5px solid var(--border2)','border-left:4px solid var(--lt-red)',
+    'border-radius:14px','padding:14px 16px',
+    'display:flex','align-items:center','gap:12px',
+    'box-shadow:0 8px 32px rgba(0,0,0,.18)',
+    'font-family:Inter,sans-serif',
+    'animation:slideUpBanner .4s cubic-bezier(.175,.885,.32,1.275) both'
+  ].join(';');
+
+  _installBanner.innerHTML =
+    '<style>@keyframes slideUpBanner{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}</style>' +
+    '<div style="width:38px;height:38px;background:var(--lt-red);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:Inter;font-size:13px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(232,0,29,.4);">L&T</div>' +
+    '<div style="flex:1;">' +
+      '<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px;">&#128247; Install AssetOps</div>' +
+      '<div style="font-size:10px;color:var(--txt3);line-height:1.4;">Add to home screen &mdash; works offline &amp; loads faster</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;flex-shrink:0;">' +
+      '<button id="pwa-install-btn" style="background:var(--lt-red);border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 2px 8px rgba(232,0,29,.35);">Install</button>' +
+      '<button id="pwa-dismiss-btn" style="background:transparent;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:11px;color:var(--txt3);cursor:pointer;">Later</button>' +
+    '</div>';
+
+  document.body.appendChild(_installBanner);
+
+  document.getElementById('pwa-install-btn').addEventListener('click', function(){
+    if(_deferredPrompt){
+      _deferredPrompt.prompt();
+      _deferredPrompt.userChoice.then(function(r){
+        console.log('[PWA] User choice:', r.outcome);
+        _deferredPrompt = null;
+      });
+    }
+    if(_installBanner){ _installBanner.remove(); _installBanner = null; }
+  });
+
+  document.getElementById('pwa-dismiss-btn').addEventListener('click', function(){
+    if(_installBanner){ _installBanner.remove(); _installBanner = null; }
+    // Don't show again for 24 hours
+    localStorage.setItem('lt_install_dismissed', Date.now().toString());
+  });
+}
+
+// ── ONLINE / OFFLINE STATUS TOASTS ───────────────────────────
+window.addEventListener('online',  function(){ showPWAToast('Back online \u2014 data will sync now.', 3000); });
+window.addEventListener('offline', function(){ showPWAToast('You are offline. Form data saved on this device.', 5000); });
+
+function showPWAToast(msg, duration){
+  var t = document.createElement('div');
+  t.style.cssText = [
+    'position:fixed','top:70px','left:50%',
+    'transform:translateX(-50%) translateY(-20px)',
+    'background:var(--card)','border:1.5px solid var(--border2)',
+    'border-radius:10px','padding:9px 18px',
+    'font-family:JetBrains Mono,monospace','font-size:10px',
+    'color:var(--green)','letter-spacing:.3px',
+    'box-shadow:0 6px 20px rgba(0,0,0,.15)','z-index:9998',
+    'white-space:nowrap','opacity:0',
+    'transition:all .35s cubic-bezier(.175,.885,.32,1.275)',
+    'pointer-events:none'
+  ].join(';');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; }, 50);
+  setTimeout(function(){
+    t.style.opacity='0';
+    setTimeout(function(){ if(t.parentNode) t.remove(); }, 400);
+  }, duration || 3000);
+}
 
 // ── iOS INSTALL GUIDE ─────────────────────────────────────────
 (function(){

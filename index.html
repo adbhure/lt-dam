@@ -1360,24 +1360,7 @@ function showPWAToast(msg, duration){
 }
 
 // ── iOS INSTALL GUIDE ─────────────────────────────────────────
-(function(){
-  var isIos=/iphone|ipad|ipod/i.test(navigator.userAgent),standalone=window.navigator.standalone===true,isSafari=/safari/i.test(navigator.userAgent)&&!/crios|fxios/i.test(navigator.userAgent);
-  if(!isIos||standalone||!isSafari||localStorage.getItem('ios_d'))return;
-  setTimeout(function(){
-    var d=document.createElement('div');
-    d.id='iosBanner';
-    d.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#fff;border-top:3px solid #e8001d;padding:16px 16px 28px;box-shadow:0 -4px 24px rgba(0,0,0,.12);font-family:Inter,sans-serif;';
-    d.innerHTML='<button onclick="dismissIosBanner()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:#999;font-size:22px;cursor:pointer;">&times;</button>'
-      +'<div style="font-size:13px;font-weight:700;color:#0F1C2E;margin-bottom:12px;">&#128247; Install Asset on iPhone</div>'
-      +'<div style="display:flex;flex-direction:column;gap:8px;">'
-      +'<div style="background:#F4F7FB;border-radius:8px;padding:9px 12px;border:1px solid #D0DAE8;font-size:12px;color:#0F1C2E;"><b style="color:#e8001d;">1.</b> Tap the Share button &#8679; at the bottom of Safari</div>'
-      +'<div style="background:#F4F7FB;border-radius:8px;padding:9px 12px;border:1px solid #D0DAE8;font-size:12px;color:#0F1C2E;"><b style="color:#1D6FD8;">2.</b> Tap <b style="color:#1D6FD8;">Add to Home Screen</b></div>'
-      +'<div style="background:#F4F7FB;border-radius:8px;padding:9px 12px;border:1px solid #D0DAE8;font-size:12px;color:#0F1C2E;"><b style="color:#16A34A;">3.</b> Tap <b style="color:#16A34A;">Add</b> &mdash; done!</div>'
-      +'</div>'
-      +'<div style="margin-top:10px;font-size:9px;color:#8FA8C4;text-align:center;font-family:monospace;">Must use Safari &middot; Chrome on iPhone will not work</div>';
-    document.body.appendChild(d);
-  },3500);
-})();
+
 
 
 // ── THEME & FONT SIZE CONTROLS ───────────────────────────────

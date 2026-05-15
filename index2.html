@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>L&T Asset — Daily Monitoring</title>
+<title>L&T AssetOps — Daily Monitoring</title>
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Asset>
+<meta name="apple-mobile-web-app-title" content="AssetOps">
 <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
@@ -418,76 +418,198 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 .scan-status-txt{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.5px;text-align:center;}
 
 
+[data-theme="dark"] .login-input{ background:var(--bg2); }
+[data-theme="dark"] .login-input:focus{ background:rgba(232,0,29,.05); }
+
+
 /* ═══════════════════════════════════════════════════════════════
-   AUTH — LOGIN SCREEN & ACCESS DENIED
+   PREMIUM AUTH SYSTEM
 ═══════════════════════════════════════════════════════════════ */
+
+/* ── Login Screen ─────────────────────────────────────────── */
 #loginScreen{
   display:none; position:fixed; inset:0; z-index:2000;
-  background:var(--bg);
-  flex-direction:column; align-items:center; justify-content:center;
-  padding:24px;
+  background:linear-gradient(135deg, #0a0f1a 0%, #111827 40%, #0f1923 100%);
+  align-items:center; justify-content:center; padding:16px;
+  overflow:hidden;
 }
 #loginScreen.show{ display:flex; }
+#loginScreen::before{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 30%, rgba(232,0,29,.12) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 80% 70%, rgba(59,130,246,.08) 0%, transparent 55%);
+}
+#loginScreen::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
 
-.login-card{
-  width:100%; max-width:380px;
-  background:var(--card); border:1.5px solid var(--border);
-  border-radius:var(--rad2); overflow:hidden;
-  box-shadow:0 16px 48px rgba(0,0,0,.15);
-  animation:popIn .35s cubic-bezier(.175,.885,.32,1.275) both;
+/* Main card */
+.lp-wrap{
+  position:relative; z-index:1;
+  width:100%; max-width:420px;
+  animation:loginAppear .5s cubic-bezier(.175,.885,.32,1.275) both;
 }
-.login-header{
-  background:var(--lt-red); padding:24px 24px 20px;
-  display:flex; flex-direction:column; align-items:center; gap:10px;
+@keyframes loginAppear{
+  from{ opacity:0; transform:translateY(28px) scale(.96); }
+  to{   opacity:1; transform:translateY(0)    scale(1);   }
 }
-.login-logo{
-  width:52px; height:42px; background:rgba(255,255,255,.15);
-  border-radius:10px; display:flex; align-items:center; justify-content:center;
-  font-family:var(--sans); font-size:17px; font-weight:800; color:#fff;
-  border:2px solid rgba(255,255,255,.3);
+
+/* Top brand section */
+.lp-brand{
+  text-align:center; margin-bottom:28px;
 }
-.login-title{ font-family:var(--sans); font-size:18px; font-weight:800; color:#fff; letter-spacing:.5px; }
-.login-subtitle{ font-family:var(--mono); font-size:9px; color:rgba(255,255,255,.7); letter-spacing:1px; text-transform:uppercase; }
-.login-body{ padding:24px; }
-.login-field{ margin-bottom:16px; }
-.login-label{
-  font-family:var(--mono); font-size:9px; letter-spacing:1.5px;
-  text-transform:uppercase; color:var(--txt3); margin-bottom:6px; display:block;
+.lp-badge-wrap{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:64px; height:64px; border-radius:18px;
+  background:linear-gradient(135deg, #e8001d, #b50018);
+  box-shadow: 0 0 0 1px rgba(232,0,29,.3),
+              0 8px 24px rgba(232,0,29,.4),
+              0 0 48px rgba(232,0,29,.15);
+  margin-bottom:16px;
 }
-.login-input{
-  width:100%; background:var(--bg3); border:1.5px solid var(--border2);
-  border-radius:var(--rad); padding:13px 14px;
-  font-family:var(--sans); font-size:15px; color:var(--txt);
-  outline:none; transition:border-color .2s, box-shadow .2s;
+.lp-badge-txt{
+  font-family:'Inter',sans-serif; font-size:20px; font-weight:800;
+  color:#fff; letter-spacing:-.5px;
+}
+.lp-brand-name{
+  font-family:'Inter',sans-serif; font-size:20px; font-weight:700;
+  color:#fff; letter-spacing:.3px; margin-bottom:4px;
+}
+.lp-brand-sub{
+  font-family:'JetBrains Mono',monospace; font-size:9px;
+  color:rgba(255,255,255,.35); letter-spacing:2px; text-transform:uppercase;
+}
+
+/* Glass card */
+.lp-card{
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px; padding:28px 24px;
+  box-shadow: 0 24px 48px rgba(0,0,0,.4),
+              0 0 0 1px rgba(255,255,255,.05) inset;
+}
+
+/* Input fields */
+.lp-field{ margin-bottom:16px; position:relative; }
+.lp-label{
+  display:block; font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color:rgba(255,255,255,.4); margin-bottom:7px;
+}
+.lp-input-wrap{ position:relative; }
+.lp-icon{
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  font-size:15px; opacity:.4; pointer-events:none;
+}
+.lp-input{
+  width:100%; background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:12px; padding:13px 14px 13px 42px;
+  font-family:'Inter',sans-serif; font-size:15px;
+  color:#fff; outline:none;
+  transition:border-color .2s, background .2s, box-shadow .2s;
   -webkit-appearance:none;
 }
-.login-input:focus{
-  border-color:var(--lt-red);
-  box-shadow:0 0 0 3px rgba(0,0,255,.12);
-  background:var(--bg2);
+.lp-input::placeholder{ color:rgba(255,255,255,.2); }
+.lp-input:focus{
+  border-color:rgba(232,0,29,.6);
+  background:rgba(255,255,255,.09);
+  box-shadow:0 0 0 3px rgba(232,0,29,.12);
 }
-.login-input::placeholder{ color:var(--txt4); }
-.login-err{
-  font-family:var(--mono); font-size:9px; color:var(--red);
-  background:rgba(220,38,38,.07); border:1px solid rgba(220,38,38,.2);
-  border-radius:8px; padding:8px 12px; margin-bottom:14px;
-  display:none; letter-spacing:.3px; line-height:1.6;
+/* Show/hide password toggle */
+.lp-eye{
+  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  font-size:16px; cursor:pointer; opacity:.4; transition:opacity .15s;
+  user-select:none;
 }
-.login-err.show{ display:block; }
-.login-btn{
-  width:100%; background:linear-gradient(135deg,var(--lt-red),#ff3050,var(--lt-dark));
-  border:none; border-radius:var(--rad); padding:15px;
-  font-family:var(--sans); font-size:14px; font-weight:700;
-  letter-spacing:2px; text-transform:uppercase; color:#fff;
-  cursor:pointer; box-shadow:0 6px 20px rgba(232,0,29,.3);
-  transition:opacity .2s, transform .1s;
+.lp-eye:hover{ opacity:.8; }
+
+/* Error banner */
+.lp-err{
+  display:none; margin-bottom:14px;
+  padding:10px 14px;
+  background:rgba(220,38,38,.12);
+  border:1px solid rgba(220,38,38,.3);
+  border-left:3px solid #dc2626;
+  border-radius:10px;
+  font-family:'JetBrains Mono',monospace; font-size:9.5px;
+  color:#fca5a5; letter-spacing:.3px; line-height:1.6;
 }
-.login-btn:hover{ opacity:.9; }
-.login-btn:active{ transform:scale(.99); }
-.login-btn:disabled{ opacity:.6; cursor:not-allowed; }
-.login-footer{
-  font-family:var(--mono); font-size:8.5px; color:var(--txt4);
-  text-align:center; margin-top:16px; line-height:1.7; letter-spacing:.3px;
+.lp-err.show{ display:block; }
+
+/* Submit button */
+.lp-btn{
+  width:100%; position:relative; overflow:hidden;
+  background:linear-gradient(135deg, #e8001d 0%, #ff3050 50%, #b50018 100%);
+  background-size:200% 100%;
+  border:none; border-radius:12px; padding:15px;
+  font-family:'Inter',sans-serif; font-size:14px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; color:#fff; cursor:pointer;
+  box-shadow:0 4px 20px rgba(232,0,29,.4);
+  transition:background-position .4s, transform .1s, box-shadow .2s;
+  margin-top:4px;
+}
+.lp-btn:hover{ background-position:100% 0; box-shadow:0 6px 28px rgba(232,0,29,.5); }
+.lp-btn:active{ transform:scale(.99); }
+.lp-btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+.lp-btn-inner{ display:flex; align-items:center; justify-content:center; gap:8px; }
+.lp-spinner{
+  display:none; width:16px; height:16px;
+  border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff; border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+.lp-btn.loading .lp-spinner{ display:block; }
+.lp-btn.loading .lp-btn-txt{ opacity:.7; }
+
+/* Divider + test link */
+.lp-divider{
+  display:flex; align-items:center; gap:10px; margin:16px 0 12px;
+}
+.lp-divider::before,.lp-divider::after{
+  content:''; flex:1; height:1px; background:rgba(255,255,255,.08);
+}
+.lp-divider-txt{
+  font-family:'JetBrains Mono',monospace; font-size:8px;
+  color:rgba(255,255,255,.2); letter-spacing:1px; text-transform:uppercase;
+  white-space:nowrap;
+}
+/* Connection test button */
+.lp-test-btn{
+  width:100%; background:transparent;
+  border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:10px;
+  font-family:'JetBrains Mono',monospace; font-size:9.5px;
+  color:rgba(255,255,255,.35); letter-spacing:.5px; text-transform:uppercase;
+  cursor:pointer; transition:all .2s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.lp-test-btn:hover{ border-color:rgba(255,255,255,.25); color:rgba(255,255,255,.6); }
+
+/* Test result */
+.lp-test-result{
+  display:none; margin-top:10px; padding:8px 12px;
+  border-radius:8px; font-family:'JetBrains Mono',monospace;
+  font-size:9px; letter-spacing:.3px; line-height:1.7;
+}
+.lp-test-result.ok{
+  background:rgba(22,163,74,.1); border:1px solid rgba(22,163,74,.25); color:#86efac;
+}
+.lp-test-result.fail{
+  background:rgba(220,38,38,.1); border:1px solid rgba(220,38,38,.25); color:#fca5a5;
+}
+.lp-test-result.show{ display:block; }
+
+/* Footer */
+.lp-footer{
+  text-align:center; margin-top:20px;
+  font-family:'JetBrains Mono',monospace; font-size:8.5px;
+  color:rgba(255,255,255,.2); letter-spacing:.5px; line-height:1.8;
 }
 
 /* Operator badge in topbar */
@@ -495,27 +617,39 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
   display:none; align-items:center; gap:6px;
   background:rgba(22,163,74,.08); border:1px solid rgba(22,163,74,.2);
   border-radius:16px; padding:4px 10px;
-  font-family:var(--mono); font-size:9px; color:var(--green);
+  font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--green);
   letter-spacing:.5px; cursor:pointer; transition:all .15s;
-  max-width:140px;
+  max-width:160px;
 }
 .op-badge.show{ display:flex; }
-.op-badge:hover{ background:rgba(220,38,38,.08); border-color:rgba(220,38,38,.2); color:var(--red); }
-.op-badge-dot{ width:5px; height:5px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.op-badge:hover{
+  background:rgba(220,38,38,.08); border-color:rgba(220,38,38,.2); color:var(--red);
+}
+.op-badge-dot{
+  width:5px; height:5px; border-radius:50%; background:var(--green); flex-shrink:0;
+}
 .op-badge:hover .op-badge-dot{ background:var(--red); }
-.op-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.op-name{
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;
+}
 
-/* Access denied screen */
+/* Access Denied screen */
 #accessDenied{
   display:none; position:fixed; inset:0; z-index:1500;
-  background:var(--bg);
-  flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; padding:32px;
+  background:var(--bg); flex-direction:column; align-items:center;
+  justify-content:center; text-align:center; padding:32px;
 }
 #accessDenied.show{ display:flex; }
-.ad-icon{ font-size:52px; margin-bottom:20px; }
+.ad-ring{
+  width:80px; height:80px; border-radius:50%;
+  background:rgba(220,38,38,.08); border:2px solid var(--red);
+  display:flex; align-items:center; justify-content:center;
+  font-size:34px; margin-bottom:20px;
+  box-shadow:0 0 40px rgba(220,38,38,.2);
+  animation:pop .5s cubic-bezier(.175,.885,.32,1.275) both;
+}
 .ad-title{ font-family:var(--sans); font-size:22px; font-weight:800; color:var(--red); margin-bottom:8px; }
-.ad-asset{ font-family:var(--mono); font-size:13px; color:var(--txt2); margin-bottom:6px; }
+.ad-asset{ font-family:var(--mono); font-size:13px; color:var(--txt2); margin-bottom:8px; }
 .ad-msg{ font-size:14px; color:var(--txt3); max-width:320px; line-height:1.7; margin-bottom:28px; }
 .ad-back{
   background:transparent; border:1.5px solid var(--border2);
@@ -524,9 +658,6 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
   color:var(--txt2); cursor:pointer; transition:all .2s;
 }
 .ad-back:hover{ border-color:var(--blue); color:var(--blue); }
-
-[data-theme="dark"] .login-input{ background:var(--bg2); }
-[data-theme="dark"] .login-input:focus{ background:rgba(232,0,29,.05); }
 
 /* ═══ GAP / HOLIDAY BANNER ═══════════════════════════════════ */
 .gap-banner{
@@ -742,7 +873,7 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 
 <!-- QR SCANNER OVERLAY -->
 <div id="scanOverlay">
-  <video id="scanVideo" playsinline autoplay muted></video>
+  <video id="scanVideo" playsinline webkit-playsinline autoplay muted></video>
   <canvas id="scanCanvas"></canvas>
   <div class="scan-flash" id="scanFlash"></div>
   <div class="scan-topbar">
@@ -764,49 +895,79 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
   </div>
 </div>
 
-<!-- ═══ LOGIN SCREEN ══════════════════════════════════════════ -->
+
+
+
+<!-- ═══ PREMIUM LOGIN SCREEN ═══════════════════════════════════ -->
 <div id="loginScreen">
-  <div class="login-card">
-    <div class="login-header">
-      <div class="login-logo">L&T</div>
-      <div class="login-title">AssetOps</div>
-      <div class="login-subtitle">MAHSR C3 &middot; P&amp;M Department</div>
+  <div class="lp-wrap">
+
+    <!-- Brand header -->
+    <div class="lp-brand">
+      <div class="lp-badge-wrap"><div class="lp-badge-txt">L&T</div></div>
+      <div class="lp-brand-name">AssetOps</div>
+      <div class="lp-brand-sub">MAHSR C3 &middot; P&amp;M &middot; Digital Monitoring</div>
     </div>
-    <div class="login-body">
-      <div class="login-err" id="loginErr">Invalid credentials. Please try again.</div>
-      <div class="login-field">
-        <label class="login-label">Operator ID</label>
-        <input type="text" class="login-input" id="loginId"
-          placeholder="Enter your Operator ID"
-          autocomplete="username"
-          autocapitalize="characters"
-          oninput="this.value=this.value.toUpperCase()">
+
+    <!-- Glass card -->
+    <div class="lp-card">
+      <div class="lp-err" id="loginErr">&#x26A0; Invalid credentials. Please try again.</div>
+
+      <div class="lp-field">
+        <label class="lp-label">Operator ID</label>
+        <div class="lp-input-wrap">
+          <span class="lp-icon">&#x1F464;</span>
+          <input class="lp-input" id="loginId" type="text"
+            placeholder="Enter your Operator ID"
+            autocomplete="username" autocapitalize="characters"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')G('loginPass').focus()">
+        </div>
       </div>
-      <div class="login-field">
-        <label class="login-label">Password</label>
-        <input type="password" class="login-input" id="loginPass"
-          placeholder="Enter your password"
-          autocomplete="current-password"
-          onkeydown="if(event.key==='Enter')doLogin()">
+
+      <div class="lp-field">
+        <label class="lp-label">Password</label>
+        <div class="lp-input-wrap">
+          <span class="lp-icon">&#x1F512;</span>
+          <input class="lp-input" id="loginPass" type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+          <span class="lp-eye" id="eyeToggle" onclick="togglePassView()">&#x1F441;</span>
+        </div>
       </div>
-      <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
-      <div class="login-footer">
-        Your password is encrypted before sending.<br>
-        Contact your supervisor if you forgot your credentials.
-      </div>
+
+      <button class="lp-btn" id="loginBtn" onclick="doLogin()">
+        <div class="lp-btn-inner">
+          <div class="lp-spinner"></div>
+          <span class="lp-btn-txt">Sign In</span>
+        </div>
+      </button>
+
+      <div class="lp-divider"><span class="lp-divider-txt">having trouble?</span></div>
+
+      <button class="lp-test-btn" onclick="testConnection()">
+        &#x1F50D; Test Server Connection
+      </button>
+      <div class="lp-test-result" id="testResult"></div>
+    </div>
+
+    <div class="lp-footer">
+      Secured &middot; Larsen &amp; Toubro Ltd. &middot; MAHSR C3<br>
+      Contact supervisor if you need login credentials
     </div>
   </div>
 </div>
 
-<!-- ═══ ACCESS DENIED SCREEN ══════════════════════════════════ -->
+<!-- ═══ ACCESS DENIED SCREEN ════════════════════════════════════ -->
 <div id="accessDenied">
-  <div class="ad-icon">&#x1F6AB;</div>
+  <div class="ad-ring">&#x1F6AB;</div>
   <div class="ad-title">Access Denied</div>
   <div class="ad-asset" id="adAsset"></div>
-  <div class="ad-msg" id="adMsg">This asset is not assigned to you. Contact your supervisor if you believe this is an error.</div>
+  <div class="ad-msg" id="adMsg">This asset is not assigned to you. Contact your supervisor.</div>
   <button class="ad-back" onclick="closeAccessDenied()">&#8592; Scan Another Machine</button>
 </div>
-<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════════════ -->
 
 <div class="page">
 
@@ -1069,8 +1230,8 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 <!-- ═══════════════════════════════════════════════════════════ -->
 
 <script>
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwZOeAcJiKLLhJc8hl37kjuQU7LoJCh87oZ5R7vHjXUjH6hjXC5RVcRhexPOBdCtZcg/exec';
-var SHEET_ID   = 'AKfycbwZOeAcJiKLLhJc8hl37kjuQU7LoJCh87oZ5R7vHjXUjH6hjXC5RVcRhexPOBdCtZcg';
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbymTdazwZ6oRgnQfAwjaTAencZOHzRINVmJsUbPE6oGWg0PPARRWLe-3YpkEaLGDoUU/exec';
+var SHEET_ID   = 'AKfycbymTdazwZ6oRgnQfAwjaTAencZOHzRINVmJsUbPE6oGWg0PPARRWLe-3YpkEaLGDoUU';
 var SHEET_TAB  = 'ASSET_MASTER';
 var LOCAL_DB = {
   '25237829':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},'25237721':{d:'LIGHT MAST',t:'Light Mast',c:'Lighting',s:12},
@@ -1441,42 +1602,194 @@ function resetForm(){
   setProgress(G('fCode').value?2:1);
 }
 
-// ── QR SCANNER ────────────────────────────────────────────────
+// ── THEME & FONT SIZE CONTROLS ────────────────────────────────
+function setTheme(t){
+  var valid = ['light','pink','dark'];
+  if(valid.indexOf(t) === -1) t = 'light';
+  document.documentElement.setAttribute('data-theme', t === 'light' ? '' : t);
+  localStorage.setItem('lt_theme', t);
+  document.querySelectorAll('.theme-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-t') === t);
+  });
+  var topbar = document.querySelector('.topbar');
+  if(topbar){
+    if(t === 'dark'){
+      topbar.style.borderBottom = '1px solid var(--border)';
+      topbar.style.boxShadow = 'none';
+    } else {
+      topbar.style.borderBottom = '2px solid var(--lt-red)';
+      topbar.style.boxShadow = '0 2px 12px rgba(0,0,0,.08)';
+    }
+  }
+}
+
+function setFontSize(fs){
+  var valid = ['small','medium','large'];
+  if(valid.indexOf(fs) === -1) fs = 'medium';
+  document.documentElement.setAttribute('data-fsize', fs);
+  localStorage.setItem('lt_fsize', fs);
+  document.querySelectorAll('.fsize-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-fs') === fs);
+  });
+}
+
+function toggleSettings(){
+  var p = document.getElementById('settingsPanel');
+  var o = document.getElementById('settingsOverlay');
+  if(!p || !o) return;
+  var open = p.classList.toggle('open');
+  o.classList.toggle('open', open);
+}
+
+function initDisplay(){
+  var savedTheme = localStorage.getItem('lt_theme') || 'light';
+  var savedSize  = localStorage.getItem('lt_fsize')  || 'medium';
+  setTheme(savedTheme);
+  setFontSize(savedSize);
+}
+
+// ── QR SCANNER — iOS + Android compatible ────────────────────
 var scanStream=null,scanAF=null,torchOn=false,scanOpen=false,bdAPI=null;
-if(typeof BarcodeDetector!=='undefined'){try{bdAPI=new BarcodeDetector({formats:['qr_code']});}catch(e){}}
+var isIosDevice = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+// BarcodeDetector — Chrome Android only (not iOS Safari)
+if(!isIosDevice && typeof BarcodeDetector !== 'undefined'){
+  try{ bdAPI = new BarcodeDetector({formats:['qr_code']}); }catch(e){}
+}
+
 function openScanner(){
-  if(scanOpen)return;
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('Camera not supported. Use Chrome or Safari.');return;}
-  scanOpen=true;
+  if(scanOpen) return;
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('Camera not supported. Use Chrome on Android or Safari on iPhone.');
+    return;
+  }
+  scanOpen = true;
   document.getElementById('scanOverlay').classList.add('show');
   document.getElementById('qrPill').classList.add('scanning');
-  document.getElementById('scanStatus').textContent='Requesting camera...';
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}})
+  document.getElementById('scanStatus').textContent = 'Starting camera...';
+
+  // iOS requires simpler constraints — specifying width/height with facingMode
+  // causes failures on some iOS versions. Use ideal only.
+  var constraints = isIosDevice
+    ? { video: { facingMode: { ideal: 'environment' } } }
+    : { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } };
+
+  navigator.mediaDevices.getUserMedia(constraints)
     .then(function(stream){
-      scanStream=stream;var v=document.getElementById('scanVideo');v.srcObject=stream;v.play();
-      v.addEventListener('loadedmetadata',function(){document.getElementById('scanStatus').textContent='Scanning...';startScan();});
+      scanStream = stream;
+      var v = document.getElementById('scanVideo');
+      v.srcObject = stream;
+
+      // iOS CRITICAL: must call play() explicitly and await it
+      var playPromise = v.play();
+      if(playPromise !== undefined){
+        playPromise.then(function(){
+          document.getElementById('scanStatus').textContent = 'Scanning...';
+          startScan();
+        }).catch(function(e){
+          // Play was interrupted — try again
+          setTimeout(function(){ v.play().catch(function(){}); startScan(); }, 500);
+        });
+      } else {
+        // Older browsers — no promise returned
+        startScan();
+      }
     })
     .catch(function(err){
-      scanOpen=false;document.getElementById('scanOverlay').classList.remove('show');document.getElementById('qrPill').classList.remove('scanning');
-      var m='Camera error: '+err.name;
-      if(err.name==='NotAllowedError')m='Camera permission denied. Allow in browser settings.';
-      else if(err.name==='NotFoundError')m='No camera found on this device.';
+      scanOpen = false;
+      document.getElementById('scanOverlay').classList.remove('show');
+      document.getElementById('qrPill').classList.remove('scanning');
+      var m = 'Camera error: ' + err.name;
+      if(err.name === 'NotAllowedError')
+        m = 'Camera permission denied.\n\niOS: Settings → Safari → Camera → Allow\nAndroid: Settings → Browser → Camera → Allow';
+      else if(err.name === 'NotFoundError')
+        m = 'No camera found on this device.';
       alert(m);
     });
 }
+
 function startScan(){
-  var v=document.getElementById('scanVideo'),cv=document.getElementById('scanCanvas');
-  function tick(){
-    if(!scanOpen)return;
-    if(v.readyState===v.HAVE_ENOUGH_DATA){
-      cv.width=v.videoWidth;cv.height=v.videoHeight;
-      var ctx=cv.getContext('2d');ctx.drawImage(v,0,0,cv.width,cv.height);
-      if(bdAPI){bdAPI.detect(cv).then(function(b){if(b.length>0&&scanOpen)onDetect(b[0].rawValue);}).catch(function(){});scanAF=requestAnimationFrame(tick);return;}
-      if(typeof jsQR!=='undefined'){var img=ctx.getImageData(0,0,cv.width,cv.height);var qr=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});if(qr&&scanOpen){onDetect(qr.data);return;}}
+  var v   = document.getElementById('scanVideo');
+  var cv  = document.getElementById('scanCanvas');
+  var ctx = cv.getContext('2d');
+  var lastTime = -1;   // iOS frame dedup — only process new frames
+
+  function processFrame(){
+    if(!scanOpen) return;
+
+    // ── iOS fix 1: wait until video has real dimensions ──────
+    if(v.videoWidth === 0 || v.videoHeight === 0){
+      scanAF = requestAnimationFrame(processFrame);
+      return;
     }
-    scanAF=requestAnimationFrame(tick);
+
+    // ── iOS fix 2: only process when a NEW frame is available ─
+    // v.currentTime advances only when a new video frame arrives.
+    // On iOS this is the most reliable way to detect new frames.
+    if(v.currentTime === lastTime){
+      scanAF = requestAnimationFrame(processFrame);
+      return;
+    }
+    lastTime = v.currentTime;
+
+    // ── iOS fix 3: downscale large frames for jsQR performance ─
+    // iOS cameras can be 1920×1440 — jsQR is slow at full res.
+    // Scale down to max 640px wide before scanning.
+    var scanW = v.videoWidth;
+    var scanH = v.videoHeight;
+    var maxW  = 640;
+    if(scanW > maxW){
+      var scale = maxW / scanW;
+      scanW = maxW;
+      scanH = Math.round(scanH * scale);
+    }
+    cv.width  = scanW;
+    cv.height = scanH;
+    ctx.drawImage(v, 0, 0, scanW, scanH);
+
+    // ── Method 1: BarcodeDetector (Android Chrome — fast) ────
+    if(bdAPI){
+      bdAPI.detect(cv)
+        .then(function(barcodes){
+          if(barcodes.length > 0 && scanOpen) onDetect(barcodes[0].rawValue);
+        })
+        .catch(function(){});
+      scanAF = requestAnimationFrame(processFrame);
+      return;
+    }
+
+    // ── Method 2: jsQR (iOS Safari + all others) ─────────────
+    if(typeof jsQR !== 'undefined'){
+      var imageData = ctx.getImageData(0, 0, scanW, scanH);
+      // attemptBoth: tries normal + inverted — needed for some QR prints on iOS
+      var code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'attemptBoth'
+      });
+      if(code && code.data && scanOpen){
+        onDetect(code.data);
+        return;  // stop loop — onDetect will close or resume
+      }
+    }
+
+    scanAF = requestAnimationFrame(processFrame);
   }
-  scanAF=requestAnimationFrame(tick);
+
+  // ── iOS fix 4: start loop AFTER canplay fires if not ready ─
+  if(v.readyState >= 3){
+    // Already has data — start immediately
+    scanAF = requestAnimationFrame(processFrame);
+  } else {
+    // Wait for canplay event (more reliable than readyState polling on iOS)
+    var started = false;
+    v.addEventListener('canplay', function onCanPlay(){
+      v.removeEventListener('canplay', onCanPlay);
+      if(!started){ started = true; scanAF = requestAnimationFrame(processFrame); }
+    });
+    // Safety fallback: start anyway after 2s if canplay never fires
+    setTimeout(function(){
+      if(!started && scanOpen){ started = true; scanAF = requestAnimationFrame(processFrame); }
+    }, 2000);
+  }
 }
 function onDetect(raw){
   if(!scanOpen)return;
@@ -1652,530 +1965,269 @@ function showPWAToast(msg, duration){
 
 
 
+
 // ================================================================
-//  AUTH — Session Management, Login, Permission Checks
+//  AUTH SYSTEM — Plain-text passwords (stored & edited in sheet)
+//  No hashing — admin edits Password column directly in sheet.
+//
+//  CORS FIX: Uses a robust fetch wrapper that detects:
+//    • Device offline (navigator.onLine)
+//    • Apps Script redirect/HTML response (deployment issue)
+//    • Actual server errors (wrong credentials, etc.)
 // ================================================================
 
-var currentOperator = null;   // {opId, name, role, assignedAssets}
+var SESSION = null; // { opId, name, role, assignedAssets[], token }
 
-// ── SHA-256 using Web Crypto API ─────────────────────────────────
-async function sha256(str) {
-  var buf  = new TextEncoder().encode(str);
-  var hash = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hash))
-    .map(function(b){ return b.toString(16).padStart(2,'0'); })
-    .join('');
-}
-
-// ── Session storage keys ─────────────────────────────────────────
-var LS_OP_ID    = 'lt_op_id';
-var LS_OP_TOKEN = 'lt_op_token';
-var LS_OP_NAME  = 'lt_op_name';
-var LS_OP_ROLE  = 'lt_op_role';
-var LS_OP_ASSETS= 'lt_op_assets';  // JSON array or '*'
-
-function saveSession(profile, token) {
-  try {
-    localStorage.setItem(LS_OP_ID,    profile.opId);
-    localStorage.setItem(LS_OP_TOKEN, token);
-    localStorage.setItem(LS_OP_NAME,  profile.name);
-    localStorage.setItem(LS_OP_ROLE,  profile.role);
-    localStorage.setItem(LS_OP_ASSETS, JSON.stringify(profile.assignedAssets));
-  } catch(e) {}
-}
-
-function loadSession() {
-  try {
-    var opId   = localStorage.getItem(LS_OP_ID);
-    var token  = localStorage.getItem(LS_OP_TOKEN);
-    var name   = localStorage.getItem(LS_OP_NAME);
-    var role   = localStorage.getItem(LS_OP_ROLE);
-    var assets = localStorage.getItem(LS_OP_ASSETS);
-    if (!opId || !token) return null;
-    return {
-      opId:           opId,
-      token:          token,
-      name:           name || opId,
-      role:           role || 'OPERATOR',
-      assignedAssets: assets ? JSON.parse(assets) : []
-    };
-  } catch(e) { return null; }
-}
-
-function clearSession() {
-  try {
-    [LS_OP_ID, LS_OP_TOKEN, LS_OP_NAME, LS_OP_ROLE, LS_OP_ASSETS]
-      .forEach(function(k){ localStorage.removeItem(k); });
-  } catch(e) {}
-  currentOperator = null;
-}
-
-// ── Show/hide login screen ────────────────────────────────────────
-function showLoginScreen(errMsg) {
-  document.getElementById('loginScreen').classList.add('show');
-  if (errMsg) {
-    var el = document.getElementById('loginErr');
-    el.textContent = errMsg;
-    el.classList.add('show');
-  }
-  // Pre-fill saved operator ID for convenience
-  try {
-    var saved = localStorage.getItem(LS_OP_ID);
-    if (saved) document.getElementById('loginId').value = saved;
-  } catch(e) {}
-  setTimeout(function(){
-    var passEl = document.getElementById('loginPass');
-    if (document.getElementById('loginId').value) passEl.focus();
-    else document.getElementById('loginId').focus();
-  }, 150);
-}
-
-function hideLoginScreen() {
-  document.getElementById('loginScreen').classList.remove('show');
-  document.getElementById('loginErr').classList.remove('show');
-  document.getElementById('loginPass').value = '';
-}
-
-// ── Operator badge in topbar ──────────────────────────────────────
-function updateOperatorBadge(profile) {
-  var badge = document.getElementById('opBadge');
-  var nameEl= document.getElementById('opName');
-  if (!profile) { badge.classList.remove('show'); return; }
-  nameEl.textContent = profile.name.split(' ')[0]; // first name only
-  badge.title = profile.name + ' (' + profile.opId + ')  —  Tap to logout';
-  badge.classList.add('show');
-}
-
-// ── LOGIN ─────────────────────────────────────────────────────────
-async function doLogin() {
-  var opId = document.getElementById('loginId').value.trim().toUpperCase();
-  var pass = document.getElementById('loginPass').value;
-  var errEl= document.getElementById('loginErr');
-  var btn  = document.getElementById('loginBtn');
-
-  if (!opId) { errEl.textContent='Please enter your Operator ID.'; errEl.classList.add('show'); return; }
-  if (!pass) { errEl.textContent='Please enter your password.';    errEl.classList.add('show'); return; }
-
-  if (!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1) {
-    // DEMO MODE — no Web App configured
-    var demoProfile = { opId:opId, name:'Demo Operator', role:'ADMIN', assignedAssets:'*' };
-    currentOperator = demoProfile;
-    saveSession(demoProfile, 'demo-token');
-    hideLoginScreen();
-    updateOperatorBadge(demoProfile);
-    loadAsset(readQR());
-    return;
+// ── SAFE FETCH — handles CORS, redirects, non-JSON responses ──
+async function safeFetch(url) {
+  // 1. Check device is online first
+  if (!navigator.onLine) {
+    throw { type: 'offline', message: 'No internet connection. Check your mobile data or WiFi.' };
   }
 
-  btn.disabled = true;
-  btn.textContent = 'Signing in...';
-  errEl.classList.remove('show');
+  var controller = new AbortController();
+  var timeout = setTimeout(function(){ controller.abort(); }, 15000);
 
   try {
-    var hash = await sha256(pass);
-    var url  = WEBAPP_URL + '?action=login&opId=' + encodeURIComponent(opId)
-             + '&hash=' + encodeURIComponent(hash) + '&t=' + Date.now();
+    var resp = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
 
-    var ctrl = new AbortController();
-    var timer= setTimeout(function(){ ctrl.abort(); }, 12000);
+    // Read response as text first — Apps Script may return HTML on config error
+    var text = await resp.text();
 
-    var resp = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(timer);
-    var data = await resp.json();
-
-    if (data.ok) {
-      currentOperator = data.profile;
-      currentOperator.token = data.token;
-      saveSession(currentOperator, data.token);
-      hideLoginScreen();
-      updateOperatorBadge(currentOperator);
-      loadAsset(readQR());
-    } else {
-      errEl.textContent = data.error || 'Login failed. Please try again.';
-      errEl.classList.add('show');
-      document.getElementById('loginPass').value = '';
-      document.getElementById('loginPass').focus();
+    // Try to parse as JSON
+    var data;
+    try {
+      data = JSON.parse(text);
+    } catch(e) {
+      // Response is HTML — usually means Web App not deployed correctly
+      if (text.includes('Sign in') || text.includes('accounts.google.com')) {
+        throw { type: 'deploy',
+          message: 'Web App not deployed correctly.\n\nFix: Apps Script → Deploy → Manage → Edit → Who has access: Anyone → Update.' };
+      }
+      throw { type: 'parse',
+        message: 'Unexpected response from server. Redeploy the Web App and try again.' };
     }
-  } catch(err) {
-    errEl.textContent = 'Network error. Check your connection and try again.';
-    errEl.classList.add('show');
-  }
+    return data;
 
-  btn.disabled = false;
-  btn.textContent = 'Sign In';
-}
-
-// ── LOGOUT ────────────────────────────────────────────────────────
-function doLogout() {
-  if (!confirm('Sign out from AssetOps?')) return;
-  clearSession();
-  currentOperator = null;
-  updateOperatorBadge(null);
-  // Reset form
-  resetForm();
-  G('gapBanner').classList.remove('show');
-  G('otBanner').classList.remove('show');
-  // Clear asset display
-  renderAsset('', null);
-  showLoginScreen();
-}
-
-// ── VALIDATE SAVED SESSION ON PAGE LOAD ──────────────────────────
-async function initAuth() {
-  var saved = loadSession();
-
-  if (!saved) {
-    showLoginScreen();
-    return;
-  }
-
-  // DEMO MODE (no web app)
-  if (!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1) {
-    currentOperator = saved;
-    updateOperatorBadge(saved);
-    loadAsset(readQR());
-    return;
-  }
-
-  // Validate token with server
-  try {
-    var url  = WEBAPP_URL + '?action=validate_token&opId=' + encodeURIComponent(saved.opId)
-             + '&token=' + encodeURIComponent(saved.token) + '&t=' + Date.now();
-    var ctrl = new AbortController();
-    var timer= setTimeout(function(){ ctrl.abort(); }, 10000);
-    var resp = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(timer);
-    var data = await resp.json();
-
-    if (data.ok) {
-      currentOperator = data.profile;
-      currentOperator.token = saved.token;
-      // Update local cache with fresh data from server
-      saveSession(currentOperator, saved.token);
-      updateOperatorBadge(currentOperator);
-      loadAsset(readQR());
-    } else {
-      clearSession();
-      showLoginScreen(data.sessionExpired ? 'Session expired. Please sign in again.' : null);
-    }
   } catch(e) {
-    // Network error — use cached session (offline tolerance)
-    currentOperator = saved;
-    updateOperatorBadge(saved);
-    loadAsset(readQR());
-  }
-}
-
-// ── ACCESS DENIED ─────────────────────────────────────────────────
-function showAccessDenied(assetCode, message) {
-  document.getElementById('adAsset').textContent = 'Asset: ' + assetCode;
-  document.getElementById('adMsg').textContent   = message || 'This asset is not assigned to you.';
-  document.getElementById('accessDenied').classList.add('show');
-}
-
-function closeAccessDenied() {
-  document.getElementById('accessDenied').classList.remove('show');
-  // Re-open scanner so operator can scan the correct machine
-  G('qrPill').classList.remove('scanning');
-}
-
-// ── PERMISSION CHECK (client-side fast check) ────────────────────
-// Used immediately after QR scan before even calling the server.
-// Server does a second check for defence-in-depth.
-function operatorCanAccess(assetCode) {
-  if (!currentOperator) return false;
-  if (currentOperator.role === 'ADMIN') return true;
-  var assets = currentOperator.assignedAssets;
-  if (assets === '*') return true;
-  if (Array.isArray(assets)) {
-    return assets.indexOf(assetCode.toUpperCase()) !== -1;
-  }
-  return false;
-}
-
-// ── THEME & FONT SIZE CONTROLS ───────────────────────────────
-var THEMES = ['light','pink','dark'];
-var FSIZES = ['small','medium','large'];
-
-function setTheme(t){
-  if(!THEMES.includes(t)) t = 'light';
-  document.documentElement.setAttribute('data-theme', t === 'light' ? '' : t);
-  localStorage.setItem('lt_theme', t);
-  // Update active btn
-  document.querySelectorAll('.theme-btn').forEach(function(b){
-    b.classList.toggle('active', b.getAttribute('data-t') === t);
-  });
-  // Fix topbar border for light vs dark
-  var topbar = document.querySelector('.topbar');
-  if(topbar){
-    if(t === 'dark'){
-      topbar.style.borderBottom = '1px solid var(--border)';
-      topbar.style.boxShadow = 'none';
-    } else {
-      topbar.style.borderBottom = '2px solid var(--lt-red)';
-      topbar.style.boxShadow = '0 2px 12px rgba(0,0,0,.08)';
+    clearTimeout(timeout);
+    if (e.type) throw e; // already formatted
+    if (e.name === 'AbortError') {
+      throw { type: 'timeout',
+        message: 'Request timed out (15s). Check internet connection and try again.' };
     }
+    throw { type: 'network',
+      message: 'Cannot reach server. Check internet connection.' };
   }
 }
 
-function setFontSize(fs){
-  if(!FSIZES.includes(fs)) fs = 'medium';
-  document.documentElement.setAttribute('data-fsize', fs);
-  localStorage.setItem('lt_fsize', fs);
-  document.querySelectorAll('.fsize-btn').forEach(function(b){
-    b.classList.toggle('active', b.getAttribute('data-fs') === fs);
-  });
-}
+// ── Session storage ────────────────────────────────────────────
+function saveSession(s){ try{ localStorage.setItem('lt_session', JSON.stringify(s)); }catch(e){} }
+function loadSession(){ try{ var s=localStorage.getItem('lt_session'); return s?JSON.parse(s):null; }catch(e){return null;} }
+function clearSession(){ try{ localStorage.removeItem('lt_session'); }catch(e){} SESSION=null; }
 
-function toggleSettings(){
-  var p = document.getElementById('settingsPanel');
-  var o = document.getElementById('settingsOverlay');
-  var open = p.classList.toggle('open');
-  o.classList.toggle('open', open);
-}
-
-function initDisplay(){
-  var savedTheme = localStorage.getItem('lt_theme') || 'light';
-  var savedSize  = localStorage.getItem('lt_fsize')  || 'medium';
-  setTheme(savedTheme);
-  setFontSize(savedSize);
-}
-
-
-// ================================================================
-//  AUTH — Session Management, Login, Logout, Permission Check
-// ================================================================
-
-var SESSION = null;  // { opId, name, role, assignedAssets[], token }
-
-// ── SHA-256 using Web Crypto API (browser-side) ───────────────
-async function sha256(message) {
-  var msgBuffer = new TextEncoder().encode(message);
-  var hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  var hashArray  = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
-}
-
-// ── Save / Load session from localStorage ─────────────────────
-function saveSession(session) {
-  try {
-    localStorage.setItem('lt_session', JSON.stringify(session));
-  } catch(e) {}
-}
-
-function loadSession() {
-  try {
-    var s = localStorage.getItem('lt_session');
-    return s ? JSON.parse(s) : null;
-  } catch(e) { return null; }
-}
-
-function clearSession() {
-  try { localStorage.removeItem('lt_session'); } catch(e) {}
-  SESSION = null;
-}
-
-// ── Show / hide login screen ──────────────────────────────────
-function showLoginScreen() {
+// ── UI helpers ─────────────────────────────────────────────────
+function showLoginScreen(msg){
   G('loginScreen').classList.add('show');
   G('accessDenied').classList.remove('show');
-  setTimeout(function(){ G('loginId').focus(); }, 300);
+  if(msg){ G('loginErr').textContent=msg; G('loginErr').classList.add('show'); }
+  else { G('loginErr').classList.remove('show'); }
+  setTimeout(function(){ if(G('loginId').value) G('loginPass').focus(); else G('loginId').focus(); }, 350);
 }
+function hideLoginScreen(){ G('loginScreen').classList.remove('show'); }
 
-function hideLoginScreen() {
-  G('loginScreen').classList.remove('show');
-}
-
-// ── Update topbar operator badge ──────────────────────────────
-function updateOpBadge() {
-  if (SESSION) {
+function updateOpBadge(){
+  if(SESSION){
     G('opBadge').classList.add('show');
     G('opName').textContent = SESSION.name || SESSION.opId;
-    G('opBadge').title = 'Logged in as ' + SESSION.opId + '  |  Tap to logout';
+    G('opBadge').title = 'Logged in: ' + SESSION.opId + '  (tap to logout)';
   } else {
     G('opBadge').classList.remove('show');
   }
 }
 
-// ── INIT AUTH — called on DOMContentLoaded ───────────────────
-// 1. Check localStorage for saved session
-// 2. Validate token with server
-// 3. If valid → auto-login
-// 4. If invalid → show login screen
-async function initAuth() {
-  var saved = loadSession();
+function togglePassView(){
+  var inp = G('loginPass');
+  var eye = G('eyeToggle');
+  if(inp.type === 'password'){ inp.type='text';     eye.textContent='🙈'; }
+  else                        { inp.type='password'; eye.textContent='👁'; }
+}
 
-  if (!saved || !saved.opId || !saved.token) {
-    showLoginScreen();
-    return;
+function setLoginLoading(loading){
+  var btn = G('loginBtn');
+  btn.disabled = loading;
+  btn.classList.toggle('loading', loading);
+  btn.querySelector('.lp-btn-txt').textContent = loading ? 'Signing in...' : 'Sign In';
+}
+
+// ── INIT AUTH — runs on page load ──────────────────────────────
+async function initAuth(){
+  var saved = loadSession();
+  if(!saved || !saved.opId || !saved.token){
+    showLoginScreen(); return;
   }
 
-  // Validate saved token with server
-  if (!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1) {
-    // No Web App — accept saved session as-is (offline mode)
-    SESSION = saved;
-    updateOpBadge();
-    hideLoginScreen();
-    return;
+  // No Web App configured — use cached session
+  if(!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1){
+    SESSION = saved; updateOpBadge(); hideLoginScreen(); return;
   }
 
   try {
     var url = WEBAPP_URL + '?action=validate_token'
-            + '&opId='  + encodeURIComponent(saved.opId)
-            + '&token=' + encodeURIComponent(saved.token)
-            + '&t='     + Date.now();
-    var resp = await fetch(url);
-    var data = await resp.json();
-
-    if (data.ok) {
-      SESSION = {
-        opId:           data.profile.opId,
-        name:           data.profile.name,
-        role:           data.profile.role,
-        assignedAssets: data.profile.assignedAssets,
-        token:          saved.token
-      };
-      saveSession(SESSION);
-      updateOpBadge();
-      hideLoginScreen();
+      + '&opId='  + encodeURIComponent(saved.opId)
+      + '&token=' + encodeURIComponent(saved.token)
+      + '&t='     + Date.now();
+    var data = await safeFetch(url);
+    if(data.ok){
+      SESSION = { opId:data.profile.opId, name:data.profile.name,
+                  role:data.profile.role, assignedAssets:data.profile.assignedAssets,
+                  token:saved.token };
+      saveSession(SESSION); updateOpBadge(); hideLoginScreen();
+    } else if(data.sessionExpired) {
+      clearSession(); showLoginScreen('Session expired. Please log in again.');
     } else {
-      clearSession();
-      showLoginScreen();
-      if (data.sessionExpired) {
-        G('loginErr').textContent = 'Session expired. Please log in again.';
-        G('loginErr').classList.add('show');
-      }
+      clearSession(); showLoginScreen();
     }
   } catch(e) {
-    // Network error — use cached session so form works offline
-    SESSION = saved;
-    updateOpBadge();
-    hideLoginScreen();
+    // Network error on auto-login — use cached session (offline support)
+    SESSION = saved; updateOpBadge(); hideLoginScreen();
   }
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────
-async function doLogin() {
+// ── LOGIN ──────────────────────────────────────────────────────
+async function doLogin(){
   var opId = G('loginId').value.trim().toUpperCase();
   var pass = G('loginPass').value;
 
   G('loginErr').classList.remove('show');
+  G('testResult').classList.remove('show');
 
-  if (!opId) {
-    G('loginErr').textContent = 'Please enter your Operator ID.';
+  if(!opId){
+    G('loginErr').textContent = '⚠ Please enter your Operator ID.';
     G('loginErr').classList.add('show');
-    G('loginId').focus();
-    return;
+    G('loginId').focus(); return;
   }
-  if (!pass) {
-    G('loginErr').textContent = 'Please enter your password.';
+  if(!pass){
+    G('loginErr').textContent = '⚠ Please enter your password.';
     G('loginErr').classList.add('show');
-    G('loginPass').focus();
-    return;
+    G('loginPass').focus(); return;
   }
 
-  var btn = G('loginBtn');
-  btn.disabled = true;
-  btn.textContent = 'Signing in...';
+  setLoginLoading(true);
+
+  // No Web App — demo/offline mode
+  if(!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1){
+    SESSION = { opId:opId, name:opId, role:'OPERATOR', assignedAssets:'*', token:'demo' };
+    saveSession(SESSION); updateOpBadge(); hideLoginScreen();
+    setLoginLoading(false); return;
+  }
 
   try {
-    var hash = await sha256(pass);
-
-    if (!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1) {
-      // Offline / demo mode — skip server check
-      SESSION = { opId:opId, name:opId, role:'OPERATOR', assignedAssets:'*', token:'demo' };
-      saveSession(SESSION);
-      updateOpBadge();
-      hideLoginScreen();
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-      return;
-    }
-
     var url = WEBAPP_URL + '?action=login'
-            + '&opId=' + encodeURIComponent(opId)
-            + '&hash=' + encodeURIComponent(hash)
-            + '&t='    + Date.now();
-    var resp = await fetch(url);
-    var data = await resp.json();
+      + '&opId=' + encodeURIComponent(opId)
+      + '&pass=' + encodeURIComponent(pass)
+      + '&t='    + Date.now();
 
-    if (data.ok) {
-      SESSION = {
-        opId:           data.profile.opId,
-        name:           data.profile.name,
-        role:           data.profile.role,
-        assignedAssets: data.profile.assignedAssets,
-        token:          data.token
-      };
-      saveSession(SESSION);
-      updateOpBadge();
-      hideLoginScreen();
-      // Clear password field for security
-      G('loginPass').value = '';
+    var data = await safeFetch(url);
+
+    if(data.ok){
+      SESSION = { opId:data.profile.opId, name:data.profile.name,
+                  role:data.profile.role, assignedAssets:data.profile.assignedAssets,
+                  token:data.token };
+      saveSession(SESSION); updateOpBadge(); hideLoginScreen();
+      G('loginPass').value = ''; // clear password
     } else {
-      G('loginErr').textContent = data.error || 'Login failed. Please try again.';
+      G('loginErr').textContent = '⚠ ' + (data.error || 'Login failed.');
       G('loginErr').classList.add('show');
       G('loginPass').value = '';
       G('loginPass').focus();
     }
   } catch(e) {
-    G('loginErr').textContent = 'Network error. Check your connection and try again.';
+    var msg = e.message || 'An error occurred. Please try again.';
+    if(e.type === 'deploy'){
+      G('loginErr').innerHTML = '⚠ ' + msg.replace(/\n/g,'<br>');
+    } else {
+      G('loginErr').textContent = '⚠ ' + msg;
+    }
     G('loginErr').classList.add('show');
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Sign In';
+  setLoginLoading(false);
 }
 
-// ── LOGOUT ────────────────────────────────────────────────────
-function doLogout() {
-  if (!confirm('Log out of AssetOps?')) return;
-  clearSession();
-  SESSION = null;
-  updateOpBadge();
-  // Reset form state
-  G('fCode').value = '';
-  G('aCode').textContent = 'NOT LOADED';
-  G('aCode').className = 'a-code empty';
-  G('aDesc').textContent = '';
-  G('aChips').innerHTML = '<div class="chip"><div class="chip-dot" style="background:var(--txt4)"></div>Awaiting QR scan</div>';
-  G('qrTxt').textContent = '📷 Tap to Scan QR';
-  G('qrTxt').style.color = '';
-  G('statusPill').className = 'status-pill sp-standby';
-  G('statusPill').innerHTML = '<div class="sp-dot"></div>STANDBY';
-  setProgress(1);
-  showLoginScreen();
-}
+// ── TEST CONNECTION ────────────────────────────────────────────
+async function testConnection(){
+  var el = G('testResult');
+  el.className = 'lp-test-result show';
+  el.textContent = '⏳ Testing connection...';
 
-// ── ASSET PERMISSION CHECK ────────────────────────────────────
-// Called after QR scan before loading asset data.
-// Returns true if operator can access this asset.
-function checkAssetPermission(assetCode) {
-  if (!SESSION) return false;
-  if (SESSION.role === 'ADMIN') return true;
-  if (SESSION.assignedAssets === '*') return true;
-  if (Array.isArray(SESSION.assignedAssets)) {
-    return SESSION.assignedAssets.indexOf(assetCode.toUpperCase()) !== -1;
+  if(!navigator.onLine){
+    el.className = 'lp-test-result fail show';
+    el.textContent = '✗ Device is offline. Check WiFi or mobile data.'; return;
   }
+  if(!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1){
+    el.className = 'lp-test-result fail show';
+    el.textContent = '✗ WEBAPP_URL not set in index.html.'; return;
+  }
+
+  try {
+    var url = WEBAPP_URL + '?action=ping&t=' + Date.now();
+    var start = Date.now();
+    var data  = await safeFetch(url);
+    var ms    = Date.now() - start;
+    el.className = 'lp-test-result ok show';
+    el.textContent = '✓ Server reachable  (' + ms + 'ms)\n'
+      + '✓ Web App deployed correctly\n'
+      + '✓ Internet connection OK\n'
+      + 'Ready to login.';
+  } catch(e) {
+    el.className = 'lp-test-result fail show';
+    el.textContent = '✗ ' + (e.message || 'Connection failed.');
+    if(e.type === 'deploy'){
+      el.innerHTML = '✗ ' + e.message.replace(/\n/g,'<br>');
+    }
+  }
+}
+
+// ── LOGOUT ─────────────────────────────────────────────────────
+function doLogout(){
+  if(!confirm('Log out of AssetOps?')) return;
+  clearSession();
+  updateOpBadge();
+  // Reset form
+  G('fCode').value=''; G('aCode').textContent='NOT LOADED'; G('aCode').className='a-code empty';
+  G('aDesc').textContent=''; G('stdLabel').textContent='Std: — hrs/day';
+  G('aChips').innerHTML='<div class="chip"><div class="chip-dot" style="background:var(--txt4)"></div>Awaiting QR scan</div>';
+  G('qrTxt').textContent='📷 Tap to Scan QR'; G('qrTxt').style.color='';
+  G('statusPill').className='status-pill sp-standby';
+  G('statusPill').innerHTML='<div class="sp-dot"></div>STANDBY';
+  G('gapBanner').classList.remove('show'); G('otBanner').classList.remove('show');
+  setProgress(1); showLoginScreen();
+}
+
+// ── PERMISSION CHECK ───────────────────────────────────────────
+function checkAssetPermission(assetCode){
+  if(!SESSION) return false;
+  if(SESSION.role === 'ADMIN') return true;
+  if(SESSION.assignedAssets === '*') return true;
+  if(Array.isArray(SESSION.assignedAssets))
+    return SESSION.assignedAssets.indexOf(assetCode.toUpperCase()) !== -1;
   return false;
 }
 
-// ── SHOW ACCESS DENIED ────────────────────────────────────────
-function showAccessDenied(assetCode, msg) {
+function showAccessDenied(assetCode, msg){
   G('adAsset').textContent = 'Asset: ' + assetCode;
   G('adMsg').textContent   = msg || 'This asset is not assigned to you. Contact your supervisor.';
   G('accessDenied').classList.add('show');
 }
-
-function closeAccessDenied() {
+function closeAccessDenied(){
   G('accessDenied').classList.remove('show');
-  // Re-open scanner so operator can scan correct machine
   openScanner();
 }
 
-// ── INJECT opId + token into all server calls ─────────────────
-function authParams() {
-  if (!SESSION) return '';
+function authParams(){
+  if(!SESSION) return '';
   return '&opId='  + encodeURIComponent(SESSION.opId)
        + '&token=' + encodeURIComponent(SESSION.token);
 }

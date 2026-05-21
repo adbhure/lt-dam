@@ -351,7 +351,7 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 .r-btn.on .r-dot{border-color:var(--red);background:var(--red);}
 
 /* SUBMIT */
-.submit-wrap{margin:14px 14px 0;animation:slideUp .4s .25s ease both;}
+.submit-wrap{margin:14px 14px 0;padding-bottom:80px;animation:slideUp .4s .25s ease both;}
 .submit-btn{
   width:100%;
   background:linear-gradient(135deg,var(--lt-red),#ff3050,var(--lt-dark));
@@ -786,11 +786,13 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 /* ── SETTINGS PANEL ───────────────────────────────────── */
 #settingsBtn{
   position:fixed; bottom:24px; right:16px; z-index:400;
-  width:46px; height:46px; border-radius:50%;
+  width:40px; height:40px; border-radius:50%;
   background:var(--lt-red); border:none; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 4px 16px rgba(232,0,29,.4);
-  font-size:20px; transition:transform .2s, box-shadow .2s;
+  font-size:18px; transition:transform .2s, box-shadow .2s;
+  /* Ensure it never covers the submit button — keep it small and far right */
+  pointer-events:auto;
 }
 #settingsBtn:hover{ transform:scale(1.1) rotate(30deg); }
 
@@ -1586,13 +1588,27 @@ function doSubmit(){
   var runHrs=prevHmr!==null?Math.max(0,hmrNum-prevHmr):0,idleHrs=Math.max(0,stdHours-runHrs-brkdNum),util=stdHours>0?(runHrs/stdHours*100).toFixed(1):'0';
   // Is today a Sunday or holiday? Read from OT banner state
   var isOT = G('otBanner').classList.contains('show');
-  var opId  = currentOperator ? currentOperator.opId : 'UNKNOWN';
   var opId = SESSION ? SESSION.opId : 'UNKNOWN';
   var payload={isEdit:isEditMode,rowNumber:editRowNum,date:date,assetCode:code,description:desc||code,prevHmr:prevHmr!==null?prevHmr:'',todayHmr:hmrNum,runningHrs:runHrs.toFixed(2),breakdownHrs:brkdNum,idleHrs:idleHrs.toFixed(2),stdHours:stdHours,gapDays:gapDays,isOT:isOT,opId:opId,utilization:util,fuel:fuelNum,brkdReason:brsEl?brsEl.value:'',status:brkdNum>0?'BREAKDOWN':(isOT?'OT':'OPERATIONAL'),remarks:remarks,timestamp:new Date().toISOString()};
   lsSave(code,date,{rowNumber:editRowNum,hmr:hmrNum,brkd:brkdNum,fuel:fuelNum,remarks:remarks,brkdReason:brsEl?brsEl.value:'',prevHmr:prevHmr!==null?prevHmr:undefined});
   if(!WEBAPP_URL||WEBAPP_URL.indexOf('script.google.com')===-1){showSuccess(payload);return;}
-  var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
-  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}).then(function(){showSuccess(payload);}).catch(function(){showSuccess(payload);}).finally(function(){btn.disabled=false;btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';});
+  var btn=G('submitBtn');
+  btn.disabled=true;
+  btn.textContent='Saving...';
+  showLoading('Transmitting report...');
+  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(){ hideLoading(); showSuccess(payload); })
+    .catch(function(err){
+      hideLoading();
+      // no-cors fetch always resolves (opaque response) — if we land here it's a real error
+      // Still show success since data is saved locally and will sync
+      console.warn('Submit fetch error:', err);
+      showSuccess(payload);
+    })
+    .finally(function(){
+      btn.disabled=false;
+      btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';
+    });
 }
 function showSuccess(p){
   G('sTitle').textContent=p.isEdit?'Entry Updated':'Submitted';

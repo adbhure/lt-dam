@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1416,14 +1417,6 @@ function loadAsset(code){
   // ── Client-side permission check (instant, no network) ──────
   if (!checkAssetPermission(code)) {
     showAccessDenied(code);
-    return;
-  }
-
-  // ── CLIENT-SIDE PERMISSION CHECK (instant, before network) ──
-  if (!operatorCanAccess(code)) {
-    closeScanner();
-    showAccessDenied(code,
-      'Asset ' + code + ' is not assigned to you. Contact your supervisor to get access.');
     return;
   }
 

@@ -14,13 +14,8 @@
 <meta name="apple-mobile-web-app-title" content="AssetOps">
 <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<!-- jsQR loads async — only needed when camera opens, not on page load -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" defer></script>
-<!-- Font preconnect speeds up Google Fonts fetch -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"></noscript>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 /* ═══ LIGHT THEME TOKENS ═══════════════════════════════════ */
@@ -351,7 +346,7 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 .r-btn.on .r-dot{border-color:var(--red);background:var(--red);}
 
 /* SUBMIT */
-.submit-wrap{margin:14px 14px 0;padding-bottom:80px;animation:slideUp .4s .25s ease both;}
+.submit-wrap{margin:14px 14px 0;animation:slideUp .4s .25s ease both;}
 .submit-btn{
   width:100%;
   background:linear-gradient(135deg,var(--lt-red),#ff3050,var(--lt-dark));
@@ -786,13 +781,11 @@ textarea.fi{resize:none;height:78px;line-height:1.6;font-size:13px;}
 /* ── SETTINGS PANEL ───────────────────────────────────── */
 #settingsBtn{
   position:fixed; bottom:24px; right:16px; z-index:400;
-  width:40px; height:40px; border-radius:50%;
+  width:46px; height:46px; border-radius:50%;
   background:var(--lt-red); border:none; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 4px 16px rgba(232,0,29,.4);
-  font-size:18px; transition:transform .2s, box-shadow .2s;
-  /* Ensure it never covers the submit button — keep it small and far right */
-  pointer-events:auto;
+  font-size:20px; transition:transform .2s, box-shadow .2s;
 }
 #settingsBtn:hover{ transform:scale(1.1) rotate(30deg); }
 
@@ -1261,7 +1254,6 @@ var LOCAL_DB = {
   '25980556':{d:'750 KVA DG SET',t:'Gen 750K',c:'Power-Heavy',s:24}
 };
 var LIVE_DB={},prevHmr=null,prevDate=null,stdHours=24,baseStdHours=24,gapDays=1,isEditMode=false,editRowNum=null;
-var LIVE_DB_LOADED=false; // guard: only fetch asset sheet once per session
 function G(id){return document.getElementById(id);}
 var MO=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 function pad2(n){return String(n).padStart(2,'0');}
@@ -1283,34 +1275,19 @@ function lsSave(code,date,data){try{localStorage.setItem(lsKey(code,date),JSON.s
 function lsGetEntry(code,date){try{var v=localStorage.getItem(lsKey(code,date));return v?JSON.parse(v):null;}catch(e){return null;}}
 function lsGetPrevHmr(code){try{var v=localStorage.getItem(lsPrevKey(code));return(v&&!isNaN(parseFloat(v)))?parseFloat(v):null;}catch(e){return null;}}
 function fetchAssetDB(){
-  if(!SHEET_ID) return Promise.resolve();
-  // Already fetched this session — return immediately
-  if(LIVE_DB_LOADED) return Promise.resolve();
-  // Try sessionStorage cache first (survives page navigations within the tab)
-  try {
-    var cached = sessionStorage.getItem('lt_assetdb');
-    var cachedTs = parseInt(sessionStorage.getItem('lt_assetdb_ts') || '0');
-    var AGE_LIMIT = 30 * 60 * 1000; // 30 minutes
-    if(cached && (Date.now() - cachedTs) < AGE_LIMIT){
-      LIVE_DB = JSON.parse(cached);
-      LIVE_DB_LOADED = true;
-      return Promise.resolve();
-    }
-  } catch(e){}
+  if(!SHEET_ID)return Promise.resolve();
   var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet='+encodeURIComponent(SHEET_TAB)+'&t='+Date.now();
-  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},5000);
+  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},8000);
   return fetch(url,{cache:'no-store',signal:ctrl.signal}).then(function(r){clearTimeout(t);return r.text();}).then(function(csv){
     var db={},lines=csv.trim().split('\n');
     for(var i=1;i<lines.length;i++){var c=splitCSV(lines[i]);if(c.length<2)continue;var code=c[0].replace(/"/g,'').trim().toUpperCase();if(!code)continue;db[code]={d:c[1].replace(/"/g,'').trim(),t:(c[2]||'Equipment').replace(/"/g,'').trim(),c:(c[3]||'General').replace(/"/g,'').trim(),s:parseInt((c[4]||'24').replace(/"/g,'').trim())||24};}
-    LIVE_DB=db; LIVE_DB_LOADED=true;
-    try{ sessionStorage.setItem('lt_assetdb', JSON.stringify(db)); sessionStorage.setItem('lt_assetdb_ts', String(Date.now())); }catch(e){}
-  }).catch(function(){clearTimeout(t);});
+    LIVE_DB=db;}).catch(function(){clearTimeout(t);});
 }
 function splitCSV(l){var r=[],cur='',q=false;for(var i=0;i<l.length;i++){var ch=l[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;}}r.push(cur);return r;}
 function fetchEntryStatus(code,date){
   if(!WEBAPP_URL||WEBAPP_URL.indexOf('script.google.com')===-1)return Promise.resolve(null);
   var url=WEBAPP_URL+'?action=check&code='+encodeURIComponent(code)+'&date='+encodeURIComponent(date)+authParams()+'&t='+Date.now();
-  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},6000);
+  var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},10000);
   return fetch(url,{signal:ctrl.signal})
     .then(function(r){clearTimeout(t);return r.json();})
     .then(function(data){
@@ -1433,30 +1410,37 @@ function prefillExisting(ex){
 }
 function loadAsset(code){
   if(!code){renderAsset('',null);return;}
+  // ── Auth guard ──────────────────────────────────────────────
   if (!SESSION) { showLoginScreen(); return; }
-  if (!checkAssetPermission(code)) { showAccessDenied(code); return; }
 
-  // ── INSTANT render from LOCAL_DB — user sees asset immediately ──
-  G('aCode').textContent=code; G('fCode').value=code;
-  var date=G('fDate').value||todayISO();
-  var localA=LOCAL_DB[code];
-  if(localA){ renderAsset(code,localA); stdHours=localA.s||24; baseStdHours=localA.s||24; }
-
-  // ── Restore prev HMR from localStorage before any network ──
-  var lsEntry=lsGetEntry(code,date); var lsPrev=lsGetPrevHmr(code);
-  if(lsPrev!==null&&(lsEntry===null||lsEntry.date!==date)) applyPrevHmr(lsPrev, null);
-  if(lsEntry){
-    applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev, lsEntry.prevDate||null);
-    prefillExisting({rowNumber:lsEntry.rowNumber||null,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});
+  // ── Client-side permission check (instant, no network) ──────
+  if (!checkAssetPermission(code)) {
+    showAccessDenied(code);
+    return;
   }
 
-  // ── Background network fetch — does NOT block the UI above ──
-  showLoading('Syncing with server...');
+  // ── CLIENT-SIDE PERMISSION CHECK (instant, before network) ──
+  if (!operatorCanAccess(code)) {
+    closeScanner();
+    showAccessDenied(code,
+      'Asset ' + code + ' is not assigned to you. Contact your supervisor to get access.');
+    return;
+  }
+
+  showLoading('Loading asset...');
+  G('aCode').textContent=code;G('fCode').value=code;
+  var date=G('fDate').value||todayISO();
+  var localA=LOCAL_DB[code];
+  if(localA){renderAsset(code,localA);stdHours=localA.s||24;baseStdHours=localA.s||24;}
+  var lsEntry=lsGetEntry(code,date);var lsPrev=lsGetPrevHmr(code);
+  if(lsPrev!==null&&(lsEntry===null||lsEntry.date!==date))applyPrevHmr(lsPrev, null);
+  if(lsEntry){applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev, lsEntry.prevDate||null);prefillExisting({rowNumber:lsEntry.rowNumber||null,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});hideLoading();}
   Promise.all([fetchAssetDB(),fetchEntryStatus(code,date)]).then(function(results){
     hideLoading();var es=results[1];
     var a=LIVE_DB[code]||LOCAL_DB[code]||null;renderAsset(code,a);
     if(a){stdHours=a.s||24;baseStdHours=a.s||24;}
     if(es&&!es.ok&&es.denied){
+      // Server rejected — access denied or session expired
       hideLoading();
       if(es.sessionExpired){ clearSession(); showLoginScreen('Session expired. Please sign in again.'); return; }
       showAccessDenied(code, es.error || 'Access denied.');
@@ -1464,12 +1448,14 @@ function loadAsset(code){
     }
     if(es&&es.ok){
       applyPrevHmr(es.prevHmr, es.prevDate||null);
+      // ── BACKEND-DRIVEN banners ────────────────────────────────
       showOTBanner(es.todayStatus);
       showGapBanner(es.workInfo);
       if(es.workInfo && es.workInfo.stdHours !== undefined){
         stdHours = es.workInfo.stdHours;
         baseStdHours = es.workInfo.baseStdHours || baseStdHours;
       }
+      // ─────────────────────────────────────────────────────────
       if(es.existing){
         prefillExisting(es.existing);
         lsSave(code,date,{rowNumber:es.existing.rowNumber,hmr:es.existing.hmr,brkd:es.existing.brkd,fuel:es.existing.fuel,remarks:es.existing.remarks,brkdReason:es.existing.brkdReason,prevHmr:es.prevHmr,prevDate:es.prevDate||null});
@@ -1588,27 +1574,13 @@ function doSubmit(){
   var runHrs=prevHmr!==null?Math.max(0,hmrNum-prevHmr):0,idleHrs=Math.max(0,stdHours-runHrs-brkdNum),util=stdHours>0?(runHrs/stdHours*100).toFixed(1):'0';
   // Is today a Sunday or holiday? Read from OT banner state
   var isOT = G('otBanner').classList.contains('show');
+  var opId  = currentOperator ? currentOperator.opId : 'UNKNOWN';
   var opId = SESSION ? SESSION.opId : 'UNKNOWN';
   var payload={isEdit:isEditMode,rowNumber:editRowNum,date:date,assetCode:code,description:desc||code,prevHmr:prevHmr!==null?prevHmr:'',todayHmr:hmrNum,runningHrs:runHrs.toFixed(2),breakdownHrs:brkdNum,idleHrs:idleHrs.toFixed(2),stdHours:stdHours,gapDays:gapDays,isOT:isOT,opId:opId,utilization:util,fuel:fuelNum,brkdReason:brsEl?brsEl.value:'',status:brkdNum>0?'BREAKDOWN':(isOT?'OT':'OPERATIONAL'),remarks:remarks,timestamp:new Date().toISOString()};
   lsSave(code,date,{rowNumber:editRowNum,hmr:hmrNum,brkd:brkdNum,fuel:fuelNum,remarks:remarks,brkdReason:brsEl?brsEl.value:'',prevHmr:prevHmr!==null?prevHmr:undefined});
   if(!WEBAPP_URL||WEBAPP_URL.indexOf('script.google.com')===-1){showSuccess(payload);return;}
-  var btn=G('submitBtn');
-  btn.disabled=true;
-  btn.textContent='Saving...';
-  showLoading('Transmitting report...');
-  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(function(){ hideLoading(); showSuccess(payload); })
-    .catch(function(err){
-      hideLoading();
-      // no-cors fetch always resolves (opaque response) — if we land here it's a real error
-      // Still show success since data is saved locally and will sync
-      console.warn('Submit fetch error:', err);
-      showSuccess(payload);
-    })
-    .finally(function(){
-      btn.disabled=false;
-      btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';
-    });
+  var btn=G('submitBtn');btn.disabled=true;btn.textContent='Saving...';
+  fetch(WEBAPP_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}).then(function(){showSuccess(payload);}).catch(function(){showSuccess(payload);}).finally(function(){btn.disabled=false;btn.textContent=isEditMode?'Update Entry':'Transmit Daily Report';});
 }
 function showSuccess(p){
   G('sTitle').textContent=p.isEdit?'Entry Updated':'Submitted';
@@ -2014,7 +1986,7 @@ async function safeFetch(url) {
   }
 
   var controller = new AbortController();
-  var timeout = setTimeout(function(){ controller.abort(); }, 10000);
+  var timeout = setTimeout(function(){ controller.abort(); }, 15000);
 
   try {
     var resp = await fetch(url, { signal: controller.signal });
@@ -2096,15 +2068,11 @@ async function initAuth(){
     showLoginScreen(); return;
   }
 
-  // ── USE CACHED SESSION INSTANTLY — don't make user wait ──────
-  // Show the app immediately with cached credentials.
-  // If the token is actually expired, the next API call will detect it.
-  SESSION = saved; updateOpBadge(); hideLoginScreen();
+  // No Web App configured — use cached session
+  if(!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1){
+    SESSION = saved; updateOpBadge(); hideLoginScreen(); return;
+  }
 
-  // No Web App configured — done
-  if(!WEBAPP_URL || WEBAPP_URL.indexOf('script.google.com') === -1) return;
-
-  // ── Background token validation — doesn't block the UI ───────
   try {
     var url = WEBAPP_URL + '?action=validate_token'
       + '&opId='  + encodeURIComponent(saved.opId)
@@ -2115,13 +2083,15 @@ async function initAuth(){
       SESSION = { opId:data.profile.opId, name:data.profile.name,
                   role:data.profile.role, assignedAssets:data.profile.assignedAssets,
                   token:saved.token };
-      saveSession(SESSION); updateOpBadge();
+      saveSession(SESSION); updateOpBadge(); hideLoginScreen();
     } else if(data.sessionExpired) {
       clearSession(); showLoginScreen('Session expired. Please log in again.');
+    } else {
+      clearSession(); showLoginScreen();
     }
-    // If data.ok is false but not expired — keep cached session, let next action fail
   } catch(e) {
-    // Network error — keep cached session (offline support), silently ignore
+    // Network error on auto-login — use cached session (offline support)
+    SESSION = saved; updateOpBadge(); hideLoginScreen();
   }
 }
 
@@ -2166,7 +2136,9 @@ async function doLogin(){
                   role:data.profile.role, assignedAssets:data.profile.assignedAssets,
                   token:data.token };
       saveSession(SESSION); updateOpBadge(); hideLoginScreen();
-      G('loginPass').value = ''; // clear password
+      G('loginPass').value = '';
+      // ── Reload asset from QR URL now that session is active ──
+      loadAsset(readQR());
     } else {
       G('loginErr').textContent = '⚠ ' + (data.error || 'Login failed.');
       G('loginErr').classList.add('show');
@@ -2274,11 +2246,8 @@ document.addEventListener('DOMContentLoaded',function(){
       this.closest('.r-btn').classList.add('on');setProgress(4);
     });
   });
-  // initAuth now restores session instantly — loadAsset runs right after
-  // Background token validation happens inside initAuth without blocking
   initAuth().then(function(){
-    var qrCode = readQR();
-    if(qrCode) loadAsset(qrCode);
+    loadAsset(readQR());
   });
 });
 </script>

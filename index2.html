@@ -1415,33 +1415,51 @@ function loadAsset(code){
 
   // ── Client-side permission check (instant, no network) ──────
   if (!checkAssetPermission(code)) {
-    showAccessDenied(code);
-    return;
-  }
-
-  // ── CLIENT-SIDE PERMISSION CHECK (instant, before network) ──
-  if (!operatorCanAccess(code)) {
-    closeScanner();
     showAccessDenied(code,
       'Asset ' + code + ' is not assigned to you. Contact your supervisor to get access.');
     return;
   }
 
-  showLoading('Loading asset...');
+  // ── INSTANT: render from LOCAL_DB immediately (no loading spinner needed) ──
   G('aCode').textContent=code;G('fCode').value=code;
   var date=G('fDate').value||todayISO();
   var localA=LOCAL_DB[code];
-  if(localA){renderAsset(code,localA);stdHours=localA.s||24;baseStdHours=localA.s||24;}
+  if(localA){
+    renderAsset(code,localA);
+    stdHours=localA.s||24;baseStdHours=localA.s||24;
+    setProgress(2);
+  } else {
+    showLoading('Loading asset...');
+  }
+
+  // ── INSTANT: apply localStorage cache while network loads ──
   var lsEntry=lsGetEntry(code,date);var lsPrev=lsGetPrevHmr(code);
   if(lsPrev!==null&&(lsEntry===null||lsEntry.date!==date))applyPrevHmr(lsPrev, null);
-  if(lsEntry){applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev, lsEntry.prevDate||null);prefillExisting({rowNumber:lsEntry.rowNumber||null,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});hideLoading();}
-  Promise.all([fetchAssetDB(),fetchEntryStatus(code,date)]).then(function(results){
-    hideLoading();var es=results[1];
-    var a=LIVE_DB[code]||LOCAL_DB[code]||null;renderAsset(code,a);
-    if(a){stdHours=a.s||24;baseStdHours=a.s||24;}
+  if(lsEntry){
+    applyPrevHmr(lsEntry.prevHmr!==undefined?lsEntry.prevHmr:lsPrev, lsEntry.prevDate||null);
+    prefillExisting({rowNumber:lsEntry.rowNumber||null,hmr:lsEntry.hmr,brkd:lsEntry.brkd,fuel:lsEntry.fuel,remarks:lsEntry.remarks,brkdReason:lsEntry.brkdReason});
+  }
+
+  // ── NETWORK: fetch entry status (priority) + asset DB (background) ──
+  // Skip fetchAssetDB if LOCAL_DB already has this asset (saves ~2-4s)
+  var needsLiveDB = !localA;
+  var networkCalls = [fetchEntryStatus(code,date)];
+  if(needsLiveDB) networkCalls.push(fetchAssetDB());
+  else fetchAssetDB().catch(function(){}); // fire-and-forget in background
+
+  Promise.all(networkCalls).then(function(results){
+    hideLoading();
+    var es=results[0];
+
+    // Update asset info from LIVE_DB if available (silent upgrade)
+    var a=LIVE_DB[code]||LOCAL_DB[code]||null;
+    if(a){
+      renderAsset(code,a);
+      stdHours=a.s||24;baseStdHours=a.s||24;
+    }
+
     if(es&&!es.ok&&es.denied){
       // Server rejected — access denied or session expired
-      hideLoading();
       if(es.sessionExpired){ clearSession(); showLoginScreen('Session expired. Please sign in again.'); return; }
       showAccessDenied(code, es.error || 'Access denied.');
       return;
@@ -1574,7 +1592,6 @@ function doSubmit(){
   var runHrs=prevHmr!==null?Math.max(0,hmrNum-prevHmr):0,idleHrs=Math.max(0,stdHours-runHrs-brkdNum),util=stdHours>0?(runHrs/stdHours*100).toFixed(1):'0';
   // Is today a Sunday or holiday? Read from OT banner state
   var isOT = G('otBanner').classList.contains('show');
-  var opId  = currentOperator ? currentOperator.opId : 'UNKNOWN';
   var opId = SESSION ? SESSION.opId : 'UNKNOWN';
   var payload={isEdit:isEditMode,rowNumber:editRowNum,date:date,assetCode:code,description:desc||code,prevHmr:prevHmr!==null?prevHmr:'',todayHmr:hmrNum,runningHrs:runHrs.toFixed(2),breakdownHrs:brkdNum,idleHrs:idleHrs.toFixed(2),stdHours:stdHours,gapDays:gapDays,isOT:isOT,opId:opId,utilization:util,fuel:fuelNum,brkdReason:brsEl?brsEl.value:'',status:brkdNum>0?'BREAKDOWN':(isOT?'OT':'OPERATIONAL'),remarks:remarks,timestamp:new Date().toISOString()};
   lsSave(code,date,{rowNumber:editRowNum,hmr:hmrNum,brkd:brkdNum,fuel:fuelNum,remarks:remarks,brkdReason:brsEl?brsEl.value:'',prevHmr:prevHmr!==null?prevHmr:undefined});
@@ -2062,6 +2079,7 @@ function setLoginLoading(loading){
 }
 
 // ── INIT AUTH — runs on page load ──────────────────────────────
+// OPTIMIZED: Use cached session IMMEDIATELY for fast UI, validate in background
 async function initAuth(){
   var saved = loadSession();
   if(!saved || !saved.opId || !saved.token){
@@ -2073,6 +2091,10 @@ async function initAuth(){
     SESSION = saved; updateOpBadge(); hideLoginScreen(); return;
   }
 
+  // ── FAST PATH: Use cached session immediately (no waiting for network) ──
+  SESSION = saved; updateOpBadge(); hideLoginScreen();
+
+  // ── BACKGROUND: Validate token with server (non-blocking) ──
   try {
     var url = WEBAPP_URL + '?action=validate_token'
       + '&opId='  + encodeURIComponent(saved.opId)
@@ -2080,18 +2102,19 @@ async function initAuth(){
       + '&t='     + Date.now();
     var data = await safeFetch(url);
     if(data.ok){
+      // Refresh profile from server (may have updated assets/role)
       SESSION = { opId:data.profile.opId, name:data.profile.name,
                   role:data.profile.role, assignedAssets:data.profile.assignedAssets,
                   token:saved.token };
-      saveSession(SESSION); updateOpBadge(); hideLoginScreen();
+      saveSession(SESSION); updateOpBadge();
     } else if(data.sessionExpired) {
       clearSession(); showLoginScreen('Session expired. Please log in again.');
     } else {
       clearSession(); showLoginScreen();
     }
   } catch(e) {
-    // Network error on auto-login — use cached session (offline support)
-    SESSION = saved; updateOpBadge(); hideLoginScreen();
+    // Network error — keep using cached session (offline support)
+    // SESSION already set above, no action needed
   }
 }
 
